@@ -1,1 +1,5 @@
 pre-commit==4.6.2
+pytest==9.1.1
+ruff==0.16.10
+# The function's own libraries, so the tests run with the same versions it deploys with.
+-r terraform/modules/content_pipeline/files/function/requirements.txt
