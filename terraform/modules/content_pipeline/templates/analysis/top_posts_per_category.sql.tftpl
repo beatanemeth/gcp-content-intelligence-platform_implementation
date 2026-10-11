@@ -1,0 +1,41 @@
+-- Question: which 3 blog posts have the most views in each category, and who
+-- wrote them?
+--
+-- Metric:
+--   - rank_in_category: 1 to 3, by views (most first). On equal views the earlier
+--     post ranks higher, then the lower ID, so the top 3 is the same on every run.
+--   - Exactly 3 rows per category (fewer if it has fewer posts), even with ties.
+--   - A post in two categories can rank in both.
+--   - author_nickname is NULL when the author is unknown (cleaned blog_posts view).
+--
+-- Placeholders: Terraform fills in the project and the cleaned dataset
+-- (templatefile()).
+WITH ranked AS (
+  SELECT
+    category.label AS category_label,
+    -- A window keeps one row per post and category; ROW_NUMBER, not RANK, so
+    -- ties still get different numbers. Partitioned by ID, not label: two
+    -- categories with the same label stay separate.
+    ROW_NUMBER() OVER (
+      PARTITION BY category.id
+      ORDER BY post.views DESC, post.first_published_date, post.id
+    ) AS rank_in_category,
+    post.title,
+    post.author_nickname,
+    post.first_published_date,
+    post.views
+  FROM `${project}.${cleaned_dataset}.blog_posts` AS post
+  -- One row per post and category. A post without a category has no row here:
+  -- it cannot rank in any category.
+  CROSS JOIN UNNEST(post.categories) AS category
+)
+
+SELECT
+  category_label,
+  rank_in_category,
+  title,
+  author_nickname,
+  first_published_date,
+  views
+FROM ranked
+WHERE rank_in_category <= 3

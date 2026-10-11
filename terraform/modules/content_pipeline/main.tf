@@ -36,6 +36,15 @@ locals {
     "articles",
   ])
 
+  # The analysis views, one question each; each has its SQL in
+  # templates/analysis/<name>.sql.tftpl.
+  analysis_views = toset([
+    "content_per_month",
+    "tag_frequency",
+    "top_posts_per_category",
+    "article_text_stats",
+  ])
+
   # One service account per job, so each gets only its own roles. The key becomes
   # the account's ID (content-<key>); the value is its display name.
   service_accounts = {

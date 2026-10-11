@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 6 (the cleaned views) is in review. Next: step 7 (the analysis views).
+**2026-10-11:** step 7 (the analysis views) is in review. Next: step 8 (the full dataset).
 
 <br>
 
@@ -20,7 +20,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | #4      | `feature/bigquery-staging`        | 4    |
 | #5      | `feature/service-accounts`        | 5a   |
 | #6      | `feature/function-and-trigger`    | 5b   |
-| Pending | `feature/cleaned-views`           | 6    |
+| #7      | `feature/cleaned-views`           | 6    |
+| Pending | `feature/analysis-views`          | 7    |
 
 <br>
 
@@ -142,6 +143,26 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 - **Deviations:**
   - **Whole table paths quoted in `check_views.py` (needed):** the emulator never returns on `` `project.dataset`.table `` (a path quoted in 2 parts), which real BigQuery accepts. The script writes `` `project.dataset.table` ``, as the templates do.
   - **No VS Code settings committed:** the plan's editor tip (`files.associations` for `*.sql.tftpl`) stays a per-user setting.
+
+### Step 7: analysis views
+
+- **Built:**
+  - **SQL templates** in `terraform/modules/content_pipeline/templates/analysis/`: `content_per_month` (window running total), `tag_frequency` (`CROSS JOIN UNNEST`), `top_posts_per_category` (`ROW_NUMBER`, top 3), `article_text_stats` (word count and reading time); each opens with its question, metric and placeholders.
+  - **Module:** the `analysis_views` local in `main.tf`; `google_bigquery_table.analysis` in `bigquery.tf`, waiting for both cleaned blocks.
+  - **Checks:** `run "analysis_views"` in `tests/bigquery.tftest.hcl`; `check_views.py` creates `content_analysis` and the 4 views, adds `has_rows` and the `--results <folder>` flag.
+- **Checked (simulated):**
+  - **`terraform test`:** 6 runs passed against the mocked provider.
+  - **`check_staging.py`, then `check_views.py` on the emulator:** every check `ok`, exit code 0. `has_rows`: 53, 89, 18 and 5 rows.
+  - **Plausible numbers:** the running totals end at 75 posts and 12 articles; 6 categories × 3 ranked posts; views fall within each category.
+  - **`--results .build/results-simulated`:** 4 CSV files with a header row; `git status` shows none of them.
+  - **Hand check:** the tag "Massa" has `uses` 59; its `_id` appears 59 times in `data/dummy/blogs/blog_posts.json`.
+  - **Proof that the check can fail:** PENDING
+  - **`fmt`, `validate`, TFLint, Ruff:** pass; TFLint reports nothing.
+  - **Workflows:** not run yet; both must be green on the pull request.
+- **Deviations:**
+  - **`top_posts_per_category` partitions by category ID, not label:** two categories with the same label stay separate. The plan says "per category" without naming the column.
+  - **`report()` in `check_views.py`:** one helper prints every check's line, so the cleaned checks (equal to a number) and `has_rows` (at least 1) share one format.
+  - **`--results` sorts by the first 2 columns (`ORDER BY 1, 2`):** a view keeps no row order; in each view the first 2 columns identify a row, so the CSV files are the same on every run.
 
 <br>
 

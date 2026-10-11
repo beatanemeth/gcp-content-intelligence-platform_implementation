@@ -78,7 +78,7 @@ pre-commit install                 # runs the hooks at every git commit
 | `pre-commit run shellcheck --all-files`                   | ShellCheck on `helpers/*.sh` (installed through pip) | 5b |
 | `git check-ignore -v data/raw/test.json terraform.tfvars` | Private files match a `.gitignore` line         | 1    |
 
-### Terraform checks (steps 2, 4, 5a, 5b, 6)
+### Terraform checks (steps 2, 4, 5a, 5b, 6, 7)
 
 ```bash
 tflint --init --config "$(pwd)/.tflint.hcl"        # once: installs the pinned plugins
@@ -88,7 +88,7 @@ cd terraform/environments/dev
 terraform init -backend=false && terraform validate   # also validates the module
 
 cd ../../modules/content_pipeline
-terraform init -backend=false && terraform test       # simulated: mocked provider, 5 runs
+terraform init -backend=false && terraform test       # simulated: mocked provider, 6 runs
 
 cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"     # full path: one config for every folder
@@ -103,7 +103,7 @@ python terraform/modules/content_pipeline/files/function/main.py data/dummy .bui
 wc -l .build/ndjson/*/*.ndjson             # 75, 6, 11, 5, 12 and 5 lines
 ```
 
-### Staging and view checks (steps 4, 6)
+### Staging and view checks (steps 4, 6, 7)
 
 Simulated with the BigQuery emulator; needs Docker and the NDJSON files from the Python checks.
 
@@ -115,6 +115,7 @@ docker run --rm -p 9050:9050 ghcr.io/goccy/bigquery-emulator:0.8.1 \
 # Terminal 2
 python simulation/check_staging.py        # every check ok, exit code 0
 python simulation/check_views.py          # after check_staging.py; every check ok, exit code 0
+python simulation/check_views.py --results .build/results-simulated   # also writes 4 CSV files
 ```
 
 <br>

@@ -1,0 +1,27 @@
+-- Question: how long are the articles on average, per category?
+--
+-- Metric:
+--   - articles: the number of articles in the category.
+--   - avg_word_count: the average number of words per article, rounded to 1
+--     decimal. Exact: the function joins the words with single spaces (step 3).
+--   - avg_reading_minutes: the average reading time per article, rounded to 1
+--     decimal. Each article's reading time is its word count / 200 (words per
+--     minute), rounded up to whole minutes.
+--   - Articles without a category share one row, with a NULL category_title.
+--
+-- Placeholders: Terraform fills in the project and the cleaned dataset
+-- (templatefile()).
+WITH measured AS (
+  SELECT
+    category_title,
+    ARRAY_LENGTH(SPLIT(article_text, ' ')) AS word_count
+  FROM `${project}.${cleaned_dataset}.articles`
+)
+
+SELECT
+  category_title,
+  COUNT(*) AS articles,
+  ROUND(AVG(word_count), 1) AS avg_word_count,
+  ROUND(AVG(CEIL(word_count / 200)), 1) AS avg_reading_minutes
+FROM measured
+GROUP BY category_title
