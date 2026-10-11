@@ -73,7 +73,7 @@ cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"
 ```
 
-- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets and the 6 staging tables against a mocked provider, checks their names and settings, then destroys them. Expected: `2 passed, 0 failed`.
+- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets, the 6 staging tables, the 3 service accounts and their 7 grants against a mocked provider, checks their names, settings and scopes, then destroys them. Expected: `3 passed, 0 failed`.
 - **`pre-commit run --all-files`:** runs the general file checks, the Terraform hooks (`fmt`, `validate`, TFLint) and the Ruff hooks in one go.
 
 ### Python checks

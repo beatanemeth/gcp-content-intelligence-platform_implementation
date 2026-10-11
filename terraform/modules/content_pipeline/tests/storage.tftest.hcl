@@ -1,6 +1,14 @@
 # Simulated check: the mocked provider replaces apply, output and destroy in real
 # GCP. Every resource "succeeds" on the laptop; computed values get random strings.
-mock_provider "google" {}
+mock_provider "google" {
+  # The provider checks an IAM member's format (serviceAccount:...) before any
+  # call, so a random string fails the grants. One valid value for all 3 accounts.
+  mock_resource "google_service_account" {
+    defaults = {
+      member = "serviceAccount:mock@content-demo-sim.iam.gserviceaccount.com"
+    }
+  }
+}
 
 # The values Part A would hand over (simulated; they point to nothing real).
 variables {

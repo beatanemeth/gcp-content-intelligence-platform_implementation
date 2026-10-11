@@ -44,6 +44,13 @@ Every simulated result, in this file, `progress.md` or `README.md`, is labelled 
 | 2    | The module, the 2 buckets | `terraform apply`, `terraform output`, `terraform destroy` | `fmt`, `validate`, TFLint; `terraform test` with the mocked `google` provider | 2026-10-11: 1 run passed; TFLint reports nothing |
 | 3    | The cleaning functions    | None: already local                                        | None needed: pytest, Ruff, the command line                                   | Not simulated. 2026-10-11: 19 tests passed; 6 NDJSON files |
 | 4    | 3 datasets, 6 staging tables, data checks | `terraform apply`; `bq load`; `bq query --use_legacy_sql=false < helpers/data_checks.sql` | `terraform test` with the mocked provider; `check_staging.py` on the BigQuery emulator; `test_schemas.py` | 2026-10-11: 2 runs passed; 26 tests passed; emulator: every check ok |
+| 5a   | 3 service accounts, 7 grants | `terraform apply`; `gcloud projects get-iam-policy`; the function's first deploy (step 9) | `terraform test` with the mocked provider; `iam.tftest.hcl` checks each account's roles and scopes | 2026-10-11: 3 runs passed; TFLint reports nothing |
+
+### Mocked service accounts (step 5a)
+
+The mocked provider gives every computed value a random string, but the provider checks an IAM member's format (`serviceAccount:...`) before any call, so the grants would fail. Every test file gives the mocked accounts a valid `member`: `mock_resource` with one value for all 3 in `storage` and `bigquery`; one `override_resource` per account in `iam`.
+
+**What the simulation cannot prove:** that the roles hold the permissions each job needs, IAM propagation delays (a new grant can take minutes to work), and that the build account's condition really lets the build read its code. A real deployment (step 9) shows them.
 
 <br>
 

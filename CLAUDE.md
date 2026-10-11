@@ -77,7 +77,7 @@ pre-commit install                 # runs the hooks at every git commit
 | `pre-commit run --all-files`                              | File checks, Terraform and Ruff hooks; dummy data intact | 1, 2, 3 |
 | `git check-ignore -v data/raw/test.json terraform.tfvars` | Private files match a `.gitignore` line         | 1    |
 
-### Terraform checks (steps 2, 4)
+### Terraform checks (steps 2, 4, 5a)
 
 ```bash
 tflint --init --config "$(pwd)/.tflint.hcl"        # once: installs the pinned plugins
@@ -87,7 +87,7 @@ cd terraform/environments/dev
 terraform init -backend=false && terraform validate   # also validates the module
 
 cd ../../modules/content_pipeline
-terraform init -backend=false && terraform test       # simulated: mocked provider, 2 runs
+terraform init -backend=false && terraform test       # simulated: mocked provider, 3 runs
 
 cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"     # full path: one config for every folder

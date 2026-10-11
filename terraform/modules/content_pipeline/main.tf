@@ -27,4 +27,33 @@ locals {
     "articles",
     "article_categories",
   ])
+
+  # One service account per job, so each gets only its own roles. The key becomes
+  # the account's ID (content-<key>); the value is its display name.
+  service_accounts = {
+    build   = "Content pipeline: function build"
+    trigger = "Content pipeline: event trigger"
+    runtime = "Content pipeline: function runtime"
+  }
+
+  # Roles that exist only at project level: no bucket or dataset can hold them.
+  # The key names the grant in the resource address.
+  project_roles = {
+    runtime_job_user = {
+      account = "runtime"
+      role    = "roles/bigquery.jobUser" # a job belongs to a project
+    }
+    trigger_event_receiver = {
+      account = "trigger"
+      role    = "roles/eventarc.eventReceiver"
+    }
+    build_artifact_writer = {
+      account = "build"
+      role    = "roles/artifactregistry.writer" # Google creates the repository at the first deploy
+    }
+    build_log_writer = {
+      account = "build"
+      role    = "roles/logging.logWriter" # logs are written per project
+    }
+  }
 }

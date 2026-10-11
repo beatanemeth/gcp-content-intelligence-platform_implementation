@@ -49,6 +49,19 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 
 <br>
 
+## IAM
+
+| Decision | Why | What it costs |
+| -------- | --- | ------------- |
+| **3 service accounts, one per job:** build, trigger, runtime | A bug or a leak in one job opens only that job's doors: the runtime account cannot touch the code; the build account cannot read the data | 3 accounts and their grants to manage instead of 1 |
+| **Each role on the smallest scope:** bucket or dataset first; the project only when the permission exists nowhere lower | The runtime account can change `content_staging` but not the cleaned and analysis layers | 4 grants stay project-wide: `jobUser`, `eventReceiver`, `artifactregistry.writer`, `logWriter` |
+| **Predefined roles, not custom ones** | Google updates them when an API changes | Some permissions go unused; IAM Recommender can show them after real runs (step 9) |
+| **A condition on the build account's `objectViewer`:** only Google's code buckets and the source bucket | Google's code buckets exist only after the first deploy, so no bucket-level grant is possible | A CEL expression to maintain; only a real deployment proves it lets the build read its code |
+| **`*_iam_member` only:** never `*_iam_binding` or `*_iam_policy` | Each grant only adds; nothing removes the access that Team A or another feature has granted | Access granted by hand outside Terraform stays unnoticed |
+| **No service account keys** | Google issues a short-lived token on each run; no key file exists to leak or rotate | None |
+
+<br>
+
 ## Python
 
 | Decision | Why | What it costs |
