@@ -74,4 +74,19 @@ tflint --recursive --config "$(pwd)/.tflint.hcl"
 ```
 
 - **`terraform test`:** creates the 2 buckets against a mocked provider, checks their names and settings, then destroys them. Expected: `1 passed, 0 failed`.
-- **`pre-commit run --all-files`:** runs the general file checks and the Terraform hooks (`fmt`, `validate`, TFLint) in one go.
+- **`pre-commit run --all-files`:** runs the general file checks, the Terraform hooks (`fmt`, `validate`, TFLint) and the Ruff hooks in one go.
+
+### Python checks
+
+```bash
+pytest                # the cleaning functions on the dummy data
+ruff check            # lint
+ruff format --check   # format
+
+# The cleaning on the laptop: writes 6 NDJSON files to the git-ignored .build/
+python terraform/modules/content_pipeline/files/function/main.py data/dummy .build/ndjson
+wc -l .build/ndjson/*/*.ndjson
+```
+
+- **`pytest`:** unwraps and cleans the 6 dummy exports. Expected: `19 passed`.
+- **The command line:** expected line counts 75, 6, 11, 5, 12 and 5. A second run gives the same files.

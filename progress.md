@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 2 (Terraform skeleton and the 2 buckets) is in review. Next: step 3 (Python cleaning).
+**2026-10-11:** step 3 (Python cleaning) is in review. Next: step 4 (BigQuery datasets, staging tables, data checks).
 
 <br>
 
@@ -15,7 +15,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | PR      | Branch                            | Step |
 | ------- | --------------------------------- | ---- |
 | #1      | `chore/repository-and-dummy-data` | 1    |
-| Pending | `feature/terraform-skeleton`      | 2    |
+| #2      | `feature/terraform-skeleton`      | 2    |
+| Pending | `feature/python-cleaning`         | 3    |
 
 <br>
 
@@ -47,9 +48,26 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
   - **Lock file for `linux_amd64` only:** `terraform init` records checksums for the laptop's platform. CI runs on the same platform. Another platform needs `terraform providers lock -platform=<platform>`.
   - **Plan clarified:** the 2 meanings of "raw" (the laptop's `data/raw/` and the bucket's `raw/`) are now in `step-0_overview.md` of the planning repository. No decision changed.
 
+### Step 3: Python cleaning, on the laptop
+
+- **Built:**
+  - **`main.py`** in `terraform/modules/content_pipeline/files/function/`: `log`, `unwrap`, `clean_html`, `transform`, `to_ndjson`, `process_folder` and a command-line entry. Based on the original project's [Jupyter ETL notebooks](https://github.com/beatanemeth/Wix-Content-Intelligence-Pipeline/tree/main/ETL): their unwrap and HTML cleaning steps, simplified; their lookups and renames move to SQL (steps 6 and 7).
+  - **Tests:** `tests/function/test_main.py`, the plan's 9 tests (19 runs with `parametrize`).
+  - **Settings:** `pyproject.toml` (pytest, Ruff); `requirements-dev.txt` adds `pytest==9.1.1` and `ruff==0.16.10`; the function's `requirements.txt` (`beautifulsoup4==4.15.0`); `ruff-pre-commit` `v0.16.10` with `ruff-check` and `ruff-format`; the `Python tests` workflow (Python 3.14, `actions/setup-python@v7`).
+- **Checked:**
+  - **pytest:** 19 passed on Python 3.10.12.
+  - **Ruff:** `ruff check` and `ruff format --check` pass.
+  - **Command line:** 6 NDJSON files with 75, 6, 11, 5, 12 and 5 lines; a second run gives the same files.
+  - **Leftovers:** no wrapper, HTML tag or HTML entity is left in any field of the transformed dummy data or the full dataset (field paths checked, no content copied).
+  - **pre-commit:** all hooks pass, including the 2 Ruff hooks.
+  - **Workflow:** not run yet; it must be green on the pull request (the first run on Python 3.14).
+- **Deviations:**
+  - **Python 3.10.12 on the laptop, not 3.14:** the maintainer's decision. CI and the function's runtime stay on 3.14, and Ruff targets `py314`. The code must also run on 3.10 (no 3.11+ syntax); the workflow checks it on 3.14.
+  - **Function `requirements.txt` in commit 1:** `requirements-dev.txt` includes it with `-r`, so it must exist first. No decision changed.
+  - **Ruff 0.16 also formats Python code blocks in Markdown files:** `ruff format` checks them too; they all pass. Ruff 0.17.0 was out at build time; the plan's 0.16.10 was kept.
+
 <br>
 
 ## Open points
 
-- **Python 3.14:** install it on the laptop and rebuild `.venv` before step 3.
 - **The 2 meanings of "raw" in `README.md` (step 5b):** with the upload script, add a short data note: `data/dummy/` and `data/raw/` on the laptop; `raw/` and `processed/` in the bucket.
