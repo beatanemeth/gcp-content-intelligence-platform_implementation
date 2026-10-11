@@ -1,0 +1,2 @@
+# Copy to backend.hcl (git-ignored) and fill in Part A's state bucket.
+bucket = "your-project-id-tfstate"
