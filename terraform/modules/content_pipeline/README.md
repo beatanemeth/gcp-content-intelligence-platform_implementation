@@ -33,6 +33,7 @@ No defaults: a missing value stops `plan` at once.
 | Name               | Description                                                   |
 | ------------------ | ------------------------------------------------------------- |
 | `data_bucket_name` | Name of the data bucket; the upload script (step 5b) reads it |
+| `dataset_ids`      | Dataset ID per layer: `staging`, `cleaned`, `analysis`        |
 
 <br>
 
@@ -46,7 +47,25 @@ No defaults: a missing value stops `plan` at once.
 | `google_storage_bucket.source` | `<project_id>-content-source` | The function's code zip (step 5b)                         |
 
 - **Both buckets:** uniform bucket-level access, public access prevention enforced, soft delete off, `force_destroy = true`.
-- **Labels on every resource that supports them:** `feature = "content-pipeline"`, `managed_by = "terraform"`.
+
+### BigQuery
+
+One dataset per layer (medallion pattern), in `var.region`, the data bucket's location: a load job reads only from a bucket in the dataset's location.
+
+| Resource                                     | Name               | Holds                                              |
+| -------------------------------------------- | ------------------ | -------------------------------------------------- |
+| `google_bigquery_dataset.layer["staging"]`  | `content_staging`  | The data as delivered: the 6 staging tables        |
+| `google_bigquery_dataset.layer["cleaned"]`  | `content_cleaned`  | Prepared data, as views (step 6)                   |
+| `google_bigquery_dataset.layer["analysis"]` | `content_analysis` | Answers, as views (step 7)                         |
+
+- **Staging tables:** `google_bigquery_table.staging`, one per NDJSON file and with the same name: `blog_posts`, `blog_categories`, `blog_tags`, `members`, `articles`, `article_categories`.
+- **Strict schemas:** `files/schemas/<table>.json`, with the Wix field names unchanged. `REQUIRED` only for `_id`; arrays `REPEATED`; nested objects `RECORD`; dates `TIMESTAMP`. A wrong type or an unknown field fails the load.
+- **`destroy` removes everything:** `delete_contents_on_destroy = true` on the datasets, `deletion_protection = false` on the tables.
+- **No partitioning or clustering:** about 130 records; every query already costs the minimum.
+
+### Labels
+
+- **On every resource that supports them:** `feature = "content-pipeline"`, `managed_by = "terraform"`. The datasets add `layer = "<layer>"`, so the bill shows the cost per layer.
 
 <br>
 
@@ -67,7 +86,7 @@ The `dev` root module (`terraform/environments/dev/`) makes this call.
 
 ## Simulated test
 
-`tests/storage.tftest.hcl` runs the module against a mocked `google` provider. Nothing reaches GCP.
+`tests/storage.tftest.hcl` (the buckets) and `tests/bigquery.tftest.hcl` (the datasets and staging tables) run the module against a mocked `google` provider. Nothing reaches GCP.
 
 ```bash
 cd terraform/modules/content_pipeline

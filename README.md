@@ -73,7 +73,7 @@ cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"
 ```
 
-- **`terraform test`:** creates the 2 buckets against a mocked provider, checks their names and settings, then destroys them. Expected: `1 passed, 0 failed`.
+- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets and the 6 staging tables against a mocked provider, checks their names and settings, then destroys them. Expected: `2 passed, 0 failed`.
 - **`pre-commit run --all-files`:** runs the general file checks, the Terraform hooks (`fmt`, `validate`, TFLint) and the Ruff hooks in one go.
 
 ### Python checks
@@ -88,5 +88,29 @@ python terraform/modules/content_pipeline/files/function/main.py data/dummy .bui
 wc -l .build/ndjson/*/*.ndjson
 ```
 
-- **`pytest`:** unwraps and cleans the 6 dummy exports. Expected: `19 passed`.
+- **`pytest`:** unwraps and cleans the 6 dummy exports, then checks every cleaned record against its staging schema. Expected: `26 passed`.
 - **The command line:** expected line counts 75, 6, 11, 5, 12 and 5. A second run gives the same files.
+
+### Staging checks (simulated)
+
+Loads the 6 NDJSON files into a local BigQuery emulator, then runs the data checks. Needs Docker and the NDJSON files from the Python checks.
+
+```bash
+# Terminal 1: the emulator, with the content_staging dataset; stop it with Ctrl+C
+docker run --rm -p 9050:9050 ghcr.io/goccy/bigquery-emulator:0.8.1 \
+    --project=content-demo-sim --dataset=content_staging
+
+# Terminal 2
+python simulation/check_staging.py
+```
+
+- **The load:** each file goes into its staging table with the table's strict schema, as a real load would.
+- **The checks:** [helpers/data_checks.sql](helpers/data_checks.sql), one row per check and table. Expected: every row `ok`, exit code 0.
+- **A hanging script:** a stopped emulator looks like a slow query. Check `docker ps` first.
+
+| Check               | Question                                                                   | Expected                                 |
+| ------------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
+| `row_count`         | Did every record arrive?                                                   | The record counts: 75, 6, 11, 5, 12 and 5 |
+| `duplicate_keys`    | Does any `_id` appear twice?                                               | 0                                        |
+| `orphan_references` | Does every category, tag, author and article category ID exist in its lookup table? | 0                               |
+| `missing_titles`    | Does every post and article have a title? An empty title counts as missing | 0                                        |

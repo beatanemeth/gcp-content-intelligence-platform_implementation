@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 3 (Python cleaning) is in review. Next: step 4 (BigQuery datasets, staging tables, data checks).
+**2026-10-11:** step 4 (BigQuery datasets, staging tables, data checks) is in review. Next: step 5a (service accounts and grants).
 
 <br>
 
@@ -16,7 +16,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | ------- | --------------------------------- | ---- |
 | #1      | `chore/repository-and-dummy-data` | 1    |
 | #2      | `feature/terraform-skeleton`      | 2    |
-| Pending | `feature/python-cleaning`         | 3    |
+| #3      | `feature/python-cleaning`         | 3    |
+| Pending | `feature/bigquery-staging`        | 4    |
 
 <br>
 
@@ -65,6 +66,27 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
   - **Python 3.10.12 on the laptop, not 3.14:** the maintainer's decision. CI and the function's runtime stay on 3.14, and Ruff targets `py314`. The code must also run on 3.10 (no 3.11+ syntax); the workflow checks it on 3.14.
   - **Function `requirements.txt` in commit 1:** `requirements-dev.txt` includes it with `-r`, so it must exist first. No decision changed.
   - **Ruff 0.16 also formats Python code blocks in Markdown files:** `ruff format` checks them too; they all pass. Ruff 0.17.0 was out at build time; the plan's 0.16.10 was kept.
+
+### Step 4: BigQuery datasets, staging tables, data checks
+
+- **Built:**
+  - **Module:** the `datasets` and `staging_tables` locals; `bigquery.tf` with the 3 datasets (`content_staging`, `content_cleaned`, `content_analysis`) and the 6 staging tables; the `dataset_ids` output, passed on in `environments/dev/outputs.tf`.
+  - **Schemas:** `files/schemas/<table>.json`, 6 files built from the dummy data, with the Wix field names.
+  - **Checks:** `tests/bigquery.tftest.hcl`; `tests/function/test_schemas.py` (7 tests); `helpers/data_checks.sql` (18 rows: 4 checks); `simulation/check_staging.py`; `requirements-dev.txt` adds `google-cloud-bigquery==3.46.1`; the `Python tests` workflow also runs on schema and `simulation/` changes.
+- **Checked (simulated):**
+  - **`terraform test`:** 2 runs passed against the mocked provider.
+  - **pytest:** 26 passed on Python 3.10.12, including `test_schemas.py`.
+  - **Schemas against the full dataset:** every field path and type fits (field paths checked, no content copied). `tagIds` is sometimes empty and `manualSort` sometimes missing; `REPEATED` and `NULLABLE` accept both.
+  - **`fmt`, `validate`, TFLint, Ruff:** pass.
+  - **`check_staging.py` on the emulator:** the 6 files loaded; every check `ok`; exit code 0.
+  - **Proof that the checks can fail:** one duplicate line in `members.ndjson` gives `row_count` 6 and `duplicate_keys` 1, both `FAIL`, exit code 1. Rebuilt with `main.py`: every check `ok` again.
+  - **Workflows:** not run yet; both must be green on the pull request.
+- **Deviations:**
+  - **Dataset `description`:** not in the plan's argument table; each dataset gets the text from the `datasets` local, so its purpose shows in the console.
+  - **`averageRating` as `FLOAT`:** the dummy and full data hold only the integer 0. A rating such as 4.5 would fail the whole load into an `INTEGER` column.
+  - **`missing_titles` also counts an empty title:** `title IS NULL OR TRIM(title) = ''`.
+  - **`tomap()` in the test assertions:** a `{ ... }` literal and a `{ for ... }` expression are objects; an object never equals a map, so the first `terraform test` failed on the `dataset_ids` output.
+  - **Python 3.10 warning:** the Google libraries print a `FutureWarning` (Python 3.10 is past end of life). Harmless; it goes away with Python 3.11 or newer.
 
 <br>
 
