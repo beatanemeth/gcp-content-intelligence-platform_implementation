@@ -56,13 +56,28 @@ One dataset per layer (medallion pattern), in `var.region`, the data bucket's lo
 | Resource                                     | Name               | Holds                                              |
 | -------------------------------------------- | ------------------ | -------------------------------------------------- |
 | `google_bigquery_dataset.layer["staging"]`  | `content_staging`  | The data as delivered: the 6 staging tables        |
-| `google_bigquery_dataset.layer["cleaned"]`  | `content_cleaned`  | Prepared data, as views (step 6)                   |
+| `google_bigquery_dataset.layer["cleaned"]`  | `content_cleaned`  | Prepared data: the 3 cleaned views                 |
 | `google_bigquery_dataset.layer["analysis"]` | `content_analysis` | Answers, as views (step 7)                         |
 
 - **Staging tables:** `google_bigquery_table.staging`, one per NDJSON file and with the same name: `blog_posts`, `blog_categories`, `blog_tags`, `members`, `articles`, `article_categories`.
 - **Strict schemas:** `files/schemas/<table>.json`, with the Wix field names unchanged. `REQUIRED` only for `_id`; arrays `REPEATED`; nested objects `RECORD`; dates `TIMESTAMP`. A wrong type or an unknown field fails the load.
 - **`destroy` removes everything:** `delete_contents_on_destroy = true` on the datasets, `deletion_protection = false` on the tables.
 - **No partitioning or clustering:** about 130 records; every query already costs the minimum.
+
+### Cleaned views
+
+Views in `content_cleaned`: no stored data; each runs its SQL on every query, so it is up to date after each load. IDs become names, Wix's camelCase becomes snake_case, only the useful columns stay.
+
+| Resource                                     | View         | One row per                                                     |
+| -------------------------------------------- | ------------ | --------------------------------------------------------------- |
+| `google_bigquery_table.cleaned["blog_posts"]` | `blog_posts` | Post, with the author's nickname and its categories and tags    |
+| `google_bigquery_table.cleaned["articles"]`   | `articles`   | Article, with its category title and plain text                 |
+| `google_bigquery_table.content`              | `content`    | Post or article, with the same columns for both                 |
+
+- **SQL in templates:** `templates/cleaned/<view>.sql.tftpl`, filled in by `templatefile()`. The only placeholders are `${project}`, `${staging_dataset}` and `${cleaned_dataset}`; table and view names stay in the SQL.
+- **Categories and tags as nested lists** (`ARRAY` of `STRUCT`) in `blog_posts`: one row per post, no bridge tables.
+- **`use_legacy_sql = false`:** the API's default is legacy SQL.
+- **`depends_on`:** BigQuery checks a view's SQL at creation, so the staging tables come first, then `blog_posts` and `articles`, then `content`, which reads the other two and therefore has its own block.
 
 ### Service accounts and grants
 
@@ -131,7 +146,7 @@ The `dev` root module (`terraform/environments/dev/`) makes this call.
 
 ## Simulated test
 
-`tests/storage.tftest.hcl` (the buckets), `tests/bigquery.tftest.hcl` (the datasets and staging tables), `tests/iam.tftest.hcl` (the service accounts and grants) and `tests/function.tftest.hcl` (the function and trigger) run the module against a mocked `google` provider. Nothing reaches GCP. The `archive` provider is real: it zips the code on the laptop.
+`tests/storage.tftest.hcl` (the buckets), `tests/bigquery.tftest.hcl` (the datasets, staging tables and cleaned views), `tests/iam.tftest.hcl` (the service accounts and grants) and `tests/function.tftest.hcl` (the function and trigger) run the module against a mocked `google` provider. Nothing reaches GCP. The `archive` provider is real: it zips the code on the laptop.
 
 - **The mocked `member`:** the provider checks an IAM member's format (`serviceAccount:...`) before any call, so the mocked accounts need a valid `member` instead of a random string. `storage` and `bigquery` give all 3 accounts one value (`mock_resource`); `iam` and `function` give each account its own (`override_resource`), so they can tell which account got which role or runs which job.
 

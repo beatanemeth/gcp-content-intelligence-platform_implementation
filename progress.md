@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 5b (the function, its trigger and the upload script) is in review. Next: step 6 (the cleaned views).
+**2026-10-11:** step 6 (the cleaned views) is in review. Next: step 7 (the analysis views).
 
 <br>
 
@@ -19,7 +19,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | #3      | `feature/python-cleaning`         | 3    |
 | #4      | `feature/bigquery-staging`        | 4    |
 | #5      | `feature/service-accounts`        | 5a   |
-| Pending | `feature/function-and-trigger`    | 5b   |
+| #6      | `feature/function-and-trigger`    | 5b   |
+| Pending | `feature/cleaned-views`           | 6    |
 
 <br>
 
@@ -125,6 +126,22 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
   - **`depends_on` on whole resources (simplification):** Terraform tracks a dependency on the whole resource, even when one instance is named. The function waits for all of `google_project_iam_member.pipeline` and for `build_code_reader`: the plan's 4 grants plus the runtime's `jobUser`, which does no harm.
   - **One `override_resource` per account in `function.tftest.hcl` (needed):** the plan has `mock_resource` defaults plus an override for the trigger account only. With shared defaults, build and runtime get the same `id` and `email`, so a swapped account would still pass. Each account gets its own `id`, `email` and `member`, as in `iam.tftest.hcl`.
   - **`upload_data.sh` changes to the repository root first:** the `terraform -chdir=...` path and the default `data/dummy` then work from any folder.
+
+### Step 6: cleaned views
+
+- **Built:**
+  - **SQL templates** in `terraform/modules/content_pipeline/templates/cleaned/`: `blog_posts.sql.tftpl` (author nickname; categories and tags as `ARRAY` of `STRUCT`, one subquery each), `articles.sql.tftpl` (category title), `content.sql.tftpl` (both, `UNION ALL`).
+  - **Module:** the `cleaned_views` local in `main.tf`; in `bigquery.tf`, the `sql_placeholders` local, `google_bigquery_table.cleaned` (`blog_posts`, `articles`) and `google_bigquery_table.content`, with `depends_on` per layer.
+  - **Checks:** `run "cleaned_views"` in `tests/bigquery.tftest.hcl`; `simulation/check_views.py`.
+- **Checked (simulated):**
+  - **`terraform test`:** `bigquery.tftest.hcl` passed both runs (`datasets_and_staging_tables`, `cleaned_views`) against the mocked provider.
+  - **`check_staging.py`, then `check_views.py` on the emulator:** every check `ok`, exit code 0: 75 posts, 12 articles, 87 content rows, no duplicate ID, no empty name, no missing article text.
+  - **Joins resolve on the dummy data:** every post has an author nickname and at least one category; the views hold all 315 tag links of the staging table; every article has a category title.
+  - **`fmt`, `validate`, TFLint, Ruff:** pass; TFLint reports nothing.
+  - **Workflows:** not run yet; both must be green on the pull request.
+- **Deviations:**
+  - **Whole table paths quoted in `check_views.py` (needed):** the emulator never returns on `` `project.dataset`.table `` (a path quoted in 2 parts), which real BigQuery accepts. The script writes `` `project.dataset.table` ``, as the templates do.
+  - **No VS Code settings committed:** the plan's editor tip (`files.associations` for `*.sql.tftpl`) stays a per-user setting.
 
 <br>
 

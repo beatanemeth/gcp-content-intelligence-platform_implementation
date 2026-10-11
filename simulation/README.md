@@ -46,6 +46,7 @@ Every simulated result, in this file, `progress.md` or `README.md`, is labelled 
 | 4    | 3 datasets, 6 staging tables, data checks | `terraform apply`; `bq load`; `bq query --use_legacy_sql=false < helpers/data_checks.sql` | `terraform test` with the mocked provider; `check_staging.py` on the BigQuery emulator; `test_schemas.py` | 2026-10-11: 2 runs passed; 26 tests passed; emulator: every check ok |
 | 5a   | 3 service accounts, 7 grants | `terraform apply`; `gcloud projects get-iam-policy`; the function's first deploy (step 9) | `terraform test` with the mocked provider; `iam.tftest.hcl` checks each account's roles and scopes | 2026-10-11: 3 runs passed; TFLint reports nothing |
 | 5b   | The function, its trigger, the 8th grant, the upload script | `terraform apply`; `helpers/upload_data.sh`; the function's logs; `bq query` on the staging tables | `terraform test` with the mocked provider; pytest with fake clients and fake events; the upload script with fake `terraform` and `gcloud`; ShellCheck | 2026-10-11: 4 runs passed; 39 tests passed; upload order correct; ShellCheck reports nothing |
+| 6    | 3 cleaned views | `terraform apply`; `bq query` on each view | `terraform test` with the mocked provider; `check_views.py` on the BigQuery emulator | 2026-10-11: 5 runs passed; emulator: every check ok (75, 12 and 87 rows) |
 
 ### Mocked service accounts (step 5a)
 
@@ -77,6 +78,12 @@ docker run --rm -p 9050:9050 ghcr.io/goccy/bigquery-emulator:0.8.1 \
 python simulation/check_staging.py
 ```
 
+**`check_views.py`** (step 6): run after `check_staging.py`, with the emulator still running; it keeps the loaded tables in memory only.
+
+- **Same SQL as Terraform:** fills in `templates/cleaned/*.sql.tftpl` with `string.Template(...).substitute(...)`: the same `${name}` syntax as `templatefile()`, and it also fails on a missing placeholder. The values match `local.sql_placeholders` in `bigquery.tf`.
+- **Terraform's order:** creates `content_cleaned` if missing, then `blog_posts`, `articles`, `content`. Each view is deleted and created again on every run, so a changed SQL file takes effect.
+- **Expected values from staging,** not fixed numbers, so the same script works for the full dataset (step 8).
+
 **`check_staging.py`:** loads the 6 NDJSON files with their schema files (`NEWLINE_DELIMITED_JSON`, `WRITE_TRUNCATE`, strict defaults), runs `helpers/data_checks.sql`, and exits with 1 on any mismatch. `--counts full` switches to the full dataset's counts (step 8).
 
 ### Quirks
@@ -86,6 +93,7 @@ python simulation/check_staging.py
 | Creating an existing dataset answers `500`, not `409`; the client retries for 10 minutes | The emulator creates `content_staging` at start (`--dataset`); the script never creates it |
 | A repeated `--dataset` flag keeps only the last value                                    | Only `content_staging` at start; step 6 creates the other 2 datasets in its script |
 | A stopped container looks like a slow query, not an error                               | When a script hangs, check `docker ps` first                                     |
+| A path quoted in 2 parts (`` `project.dataset`.table ``) never returns; real BigQuery accepts it | `check_views.py` quotes the whole path; the templates already do                 |
 
 ### What it enforces
 
