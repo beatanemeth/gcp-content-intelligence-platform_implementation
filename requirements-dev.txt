@@ -1,3 +1,4 @@
+google-cloud-bigquery==3.46.1  # simulation/check_staging.py; step 5b moves it to the function
 pre-commit==4.6.2
 pytest==9.1.1
 ruff==0.16.10

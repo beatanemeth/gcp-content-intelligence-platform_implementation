@@ -1,0 +1,8 @@
+[
+  {"name": "_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "_owner", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "_createdDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "_updatedDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "title", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "text", "type": "STRING", "mode": "NULLABLE"}
+]

@@ -1,0 +1,14 @@
+[
+  {"name": "_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "_createdDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "_updatedDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "contactId", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "status", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "privacyStatus", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "activityStatus", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "profile", "type": "RECORD", "mode": "NULLABLE", "fields": [
+    {"name": "nickname", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "slug", "type": "STRING", "mode": "NULLABLE"},
+    {"name": "title", "type": "STRING", "mode": "NULLABLE"}
+  ]}
+]

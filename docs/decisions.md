@@ -20,6 +20,8 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | **Simulation instead of real GCP:** a mocked Google provider, a BigQuery emulator, fakes | No GCP project is needed; every check runs on the laptop and in CI    | Simulated results can differ from real GCP; a real deployment (step 9) confirms them |
 | **Labelled results:** every simulated result says so                                     | A reader never mistakes a laptop check for a cloud result             | More wording in the docs                                                               |
+| **Mocked provider for Terraform:** `terraform test` with `mock_provider "google"` | Proves the names, arguments, labels and references Terraform would send | Proves nothing GCP decides: permissions, quotas, API errors |
+| **BigQuery emulator for the staging load:** `goccy/bigquery-emulator` in Docker | The real schema files, load settings and data checks run against the BigQuery API on the laptop | It loads an unknown field (dropped) and a missing `REQUIRED` `_id`; a pytest test covers both. It never runs in CI |
 
 <br>
 
@@ -32,6 +34,18 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 | **2 buckets:** data and source                                                                      | IAM is granted per bucket; the function's runtime account can write data but never touch its own code  | One more bucket to create and secure                                 |
 | **`destroy` removes everything:** `force_destroy = true`, soft delete off                           | The data lives on the laptop and can be uploaded again; nothing is left behind or billed               | A `destroy` deletes every uploaded and processed file without asking |
 | **CI runs offline checks only:** `fmt`, `validate`, `terraform test` with a mocked provider, TFLint | No GCP credentials in GitHub; checks are free and repeatable                                           | CI cannot catch errors that only a real `apply` shows (step 9)       |
+
+<br>
+
+## BigQuery
+
+| Decision | Why | What it costs |
+| -------- | --- | ------------- |
+| **3 layers (medallion pattern):** `content_staging` (tables), `content_cleaned` and `content_analysis` (views) | Each layer has one job: data as delivered, prepared data, answers. A layer label shows its cost | 3 datasets to manage instead of 1 |
+| **Strict staging schemas with the Wix field names:** `REQUIRED` only for `_id`; no unknown field, no bad record | A wrong type or an unexpected field fails the load loudly, instead of loading bad data quietly | A new Wix field stops the load until its schema is updated |
+| **`averageRating` as `FLOAT`:** every value is 0 today | A rating such as 4.5 would fail the whole load into an `INTEGER` column | None: `FLOAT` also accepts whole numbers |
+| **Data checks in SQL:** row counts, duplicate IDs, broken references, missing titles | BigQuery checks each row's shape, not the relations between rows | A manual step after each load (`bq query`) |
+| **No partitioning or clustering** | About 130 records; every query already costs the minimum | To add if the data grows to many GB |
 
 <br>
 

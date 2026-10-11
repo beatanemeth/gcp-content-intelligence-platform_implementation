@@ -77,7 +77,7 @@ pre-commit install                 # runs the hooks at every git commit
 | `pre-commit run --all-files`                              | File checks, Terraform and Ruff hooks; dummy data intact | 1, 2, 3 |
 | `git check-ignore -v data/raw/test.json terraform.tfvars` | Private files match a `.gitignore` line         | 1    |
 
-### Terraform checks (step 2)
+### Terraform checks (steps 2, 4)
 
 ```bash
 tflint --init --config "$(pwd)/.tflint.hcl"        # once: installs the pinned plugins
@@ -87,19 +87,32 @@ cd terraform/environments/dev
 terraform init -backend=false && terraform validate   # also validates the module
 
 cd ../../modules/content_pipeline
-terraform init -backend=false && terraform test       # simulated: mocked provider, 1 run
+terraform init -backend=false && terraform test       # simulated: mocked provider, 2 runs
 
 cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"     # full path: one config for every folder
 ```
 
-### Python checks (step 3)
+### Python checks (steps 3, 4)
 
 ```bash
-pytest                                     # 19 tests on the dummy data
+pytest                                     # 26 tests on the dummy data
 ruff check && ruff format --check
 python terraform/modules/content_pipeline/files/function/main.py data/dummy .build/ndjson
 wc -l .build/ndjson/*/*.ndjson             # 75, 6, 11, 5, 12 and 5 lines
+```
+
+### Staging checks (step 4)
+
+Simulated with the BigQuery emulator; needs Docker and the NDJSON files from the Python checks.
+
+```bash
+# Terminal 1: creates content_staging at start; stop with Ctrl+C
+docker run --rm -p 9050:9050 ghcr.io/goccy/bigquery-emulator:0.8.1 \
+    --project=content-demo-sim --dataset=content_staging
+
+# Terminal 2
+python simulation/check_staging.py        # every check ok, exit code 0
 ```
 
 <br>
