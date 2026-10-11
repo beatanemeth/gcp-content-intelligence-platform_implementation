@@ -1,0 +1,28 @@
+-- All content: one row per blog post or article, with the same columns for both.
+-- Terraform fills in the project and dataset names (templatefile()).
+-- Reads the 2 cleaned views, not staging, so the joins live in one place.
+--
+-- UNION ALL, not UNION: the 2 sources never share a row, so no duplicate check
+-- is needed, and it is cheaper.
+SELECT
+  'blog_post' AS content_type,
+  id AS content_id,
+  title,
+  first_published_date AS published_at,
+  ARRAY(SELECT category.label FROM UNNEST(categories) AS category) AS categories,
+  ARRAY(SELECT tag.label FROM UNNEST(tags) AS tag) AS tags
+FROM `${project}.${cleaned_dataset}.blog_posts`
+
+UNION ALL
+
+-- Article stand-ins: articles have no publish date, so created_date; their
+-- keywords serve as tags. An article without a category gets an empty list, not
+-- [NULL]: BigQuery rejects a NULL inside an array.
+SELECT
+  'article',
+  id,
+  title,
+  created_date,
+  IF(category_title IS NULL, ARRAY<STRING>[], [category_title]),
+  keywords
+FROM `${project}.${cleaned_dataset}.articles`
