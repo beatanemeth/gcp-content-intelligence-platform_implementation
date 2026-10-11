@@ -1,0 +1,16 @@
+# Tool settings only: the function is deployed as a zip, not installed as a package.
+
+[tool.pytest]
+testpaths = ["tests"]
+# Tests import main from its own folder, as the function's runtime does.
+pythonpath = ["terraform/modules/content_pipeline/files/function"]
+
+[tool.ruff]
+# The function's runtime version.
+target-version = "py314"
+# Import sorting treats main as own code, not as a third-party library.
+src = [".", "terraform/modules/content_pipeline/files/function"]
+
+[tool.ruff.lint]
+# Defaults (E, F), plus import order (I), likely bugs (B) and modern syntax (UP).
+select = ["E", "F", "I", "B", "UP"]

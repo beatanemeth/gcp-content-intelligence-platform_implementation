@@ -1,0 +1,48 @@
+# Offline checks only: pure functions on the dummy data; no GCP credentials.
+name: Python tests
+
+on:
+  pull_request:
+    paths:
+      - "terraform/modules/content_pipeline/files/function/**"
+      - "tests/**"
+      - "data/dummy/**"
+      - "pyproject.toml"
+      - "requirements-dev.txt"
+      - ".github/workflows/python-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/modules/content_pipeline/files/function/**"
+      - "tests/**"
+      - "data/dummy/**"
+      - "pyproject.toml"
+      - "requirements-dev.txt"
+      - ".github/workflows/python-tests.yml"
+
+# The token can only read the repository.
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Same Python as the function's runtime.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Install
+        run: pip install -r requirements-dev.txt
+
+      - name: Test
+        run: pytest
+
+      - name: Lint
+        run: ruff check
+
+      - name: Format
+        run: ruff format --check

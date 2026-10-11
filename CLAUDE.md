@@ -63,7 +63,7 @@ Run from the repository root unless noted. Each step adds its own commands. Clou
 ### Set-up (step 1)
 
 ```bash
-python3 -m venv .venv              # 3.10 for now; rebuild with python3.14 before step 3
+python3 -m venv .venv              # 3.10 on the laptop; CI and the function use 3.14
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements-dev.txt
@@ -74,7 +74,7 @@ pre-commit install                 # runs the hooks at every git commit
 
 | Command                                                   | Checks                                          | Step |
 | --------------------------------------------------------- | ----------------------------------------------- | ---- |
-| `pre-commit run --all-files`                              | File checks, Terraform hooks; dummy data intact | 1, 2 |
+| `pre-commit run --all-files`                              | File checks, Terraform and Ruff hooks; dummy data intact | 1, 2, 3 |
 | `git check-ignore -v data/raw/test.json terraform.tfvars` | Private files match a `.gitignore` line         | 1    |
 
 ### Terraform checks (step 2)
@@ -91,6 +91,15 @@ terraform init -backend=false && terraform test       # simulated: mocked provid
 
 cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"     # full path: one config for every folder
+```
+
+### Python checks (step 3)
+
+```bash
+pytest                                     # 19 tests on the dummy data
+ruff check && ruff format --check
+python terraform/modules/content_pipeline/files/function/main.py data/dummy .build/ndjson
+wc -l .build/ndjson/*/*.ndjson             # 75, 6, 11, 5, 12 and 5 lines
 ```
 
 <br>

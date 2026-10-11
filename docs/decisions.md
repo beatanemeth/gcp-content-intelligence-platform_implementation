@@ -32,3 +32,14 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 | **2 buckets:** data and source                                                                      | IAM is granted per bucket; the function's runtime account can write data but never touch its own code  | One more bucket to create and secure                                 |
 | **`destroy` removes everything:** `force_destroy = true`, soft delete off                           | The data lives on the laptop and can be uploaded again; nothing is left behind or billed               | A `destroy` deletes every uploaded and processed file without asking |
 | **CI runs offline checks only:** `fmt`, `validate`, `terraform test` with a mocked provider, TFLint | No GCP credentials in GitHub; checks are free and repeatable                                           | CI cannot catch errors that only a real `apply` shows (step 9)       |
+
+<br>
+
+## Python
+
+| Decision | Why | What it costs |
+| -------- | --- | ------------- |
+| **Based on the original [Jupyter ETL notebooks](https://github.com/beatanemeth/Wix-Content-Intelligence-Pipeline/tree/main/ETL):** their unwrap and HTML cleaning steps, simplified | The logic already worked on the real Wix exports | The text becomes one line: paragraph breaks are lost |
+| **Python only unwraps and cleans:** all joins, renames and lookups are SQL (steps 6 and 7) | Every transformation stays visible and testable in BigQuery; the function needs one library | A change in the analysis needs SQL, not Python |
+| **A count mismatch logs an `ERROR` and goes on** | A retry cannot fix the source file; the loaded rows show what arrived | A cut-off export is loaded; someone must watch the `ERROR` logs |
+| **Every step overwrites its output (idempotent)** | A second run gives the same files and tables, with no duplicates | No history: an earlier output is gone |
