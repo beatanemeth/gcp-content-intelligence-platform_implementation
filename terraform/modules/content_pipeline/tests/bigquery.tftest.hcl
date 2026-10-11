@@ -86,3 +86,44 @@ run "datasets_and_staging_tables" {
     error_message = "The dataset_ids output must map each layer to its dataset."
   }
 }
+
+run "cleaned_views" {
+  command = apply
+
+  assert {
+    condition = toset(concat(
+      [for t in google_bigquery_table.cleaned : t.table_id], [google_bigquery_table.content.table_id]
+    )) == toset(["blog_posts", "articles", "content"])
+    error_message = "The cleaned views must be blog_posts, articles and content."
+  }
+
+  assert {
+    condition = alltrue([
+      for t in concat(values(google_bigquery_table.cleaned), [google_bigquery_table.content]) :
+      t.dataset_id == "content_cleaned" && t.project == "content-demo-sim"
+    ])
+    error_message = "Every cleaned view must be in content_cleaned."
+  }
+
+  assert {
+    # The expected values, written out: a wrong placeholder in bigquery.tf fails.
+    condition = alltrue([
+      for t in concat(values(google_bigquery_table.cleaned), [google_bigquery_table.content]) :
+      t.view[0].query == templatefile("templates/cleaned/${t.table_id}.sql.tftpl", {
+        project         = "content-demo-sim"
+        staging_dataset = "content_staging"
+        cleaned_dataset = "content_cleaned"
+      })
+    ])
+    error_message = "Every cleaned view must use its own template, with the project and dataset names filled in."
+  }
+
+  assert {
+    condition = alltrue([
+      for t in concat(values(google_bigquery_table.cleaned), [google_bigquery_table.content]) :
+      !t.view[0].use_legacy_sql && !t.deletion_protection
+      && t.labels["feature"] == "content-pipeline" && t.labels["managed_by"] == "terraform"
+    ])
+    error_message = "Every cleaned view needs GoogleSQL, deletion_protection off and the feature and managed_by labels."
+  }
+}

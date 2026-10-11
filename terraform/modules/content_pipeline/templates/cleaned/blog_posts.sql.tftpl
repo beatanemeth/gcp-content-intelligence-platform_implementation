@@ -1,0 +1,37 @@
+-- Cleaned blog posts: one row per post, with names instead of IDs.
+-- Terraform fills in the project and dataset names (templatefile()).
+--
+-- Categories and tags stay nested lists (ARRAY of STRUCT), built by one ARRAY
+-- subquery each, not by a join in the main FROM:
+--   - a post without tags keeps its row, with an empty list;
+--   - no GROUP BY is needed to rebuild one row per post;
+--   - two lists joined in one FROM would multiply the rows (posts x categories x tags).
+SELECT
+  post._id AS id,
+  post.title,
+  post.slug,
+  post.excerpt,
+  post.firstPublishedDate AS first_published_date,
+  post.lastPublishedDate AS last_published_date,
+  post.minutesToRead AS minutes_to_read,
+  member.profile.nickname AS author_nickname,
+  post.metrics.views AS views,
+  post.metrics.likes AS likes,
+  ARRAY(
+    -- label, not title: the full dataset has categories with an empty title but
+    -- a filled label.
+    SELECT AS STRUCT category._id AS id, category.label
+    FROM UNNEST(post.categoryIds) AS category_id
+    JOIN `${project}.${staging_dataset}.blog_categories` AS category
+      ON category._id = category_id
+  ) AS categories,
+  ARRAY(
+    SELECT AS STRUCT tag._id AS id, tag.label
+    FROM UNNEST(post.tagIds) AS tag_id
+    JOIN `${project}.${staging_dataset}.blog_tags` AS tag
+      ON tag._id = tag_id
+  ) AS tags
+FROM `${project}.${staging_dataset}.blog_posts` AS post
+-- LEFT JOIN: a post with an unknown author keeps its row, with no nickname.
+LEFT JOIN `${project}.${staging_dataset}.members` AS member
+  ON member._id = post.memberId

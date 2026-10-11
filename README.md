@@ -23,7 +23,7 @@ The main decisions, with their reasons and costs, are in [docs/decisions.md](doc
 | **Upload**     | Upload script (laptop)      | The export files go to the data bucket, `raw/<group>/`; a `_READY` marker last             |
 | **Processing** | Cloud Run function          | Started by the marker; removes the Wix wrapper, cleans HTML, writes NDJSON to `processed/` |
 | **Staging**    | BigQuery `content_staging`  | 6 tables, loaded 1:1 from `processed/` with strict schemas                                 |
-| **Cleaning**   | BigQuery `content_cleaned`  | 3 views: names joined in, one row per post or article (step 6)                             |
+| **Cleaning**   | BigQuery `content_cleaned`  | 3 views: names joined in, one row per post or article                                      |
 | **Analysis**   | BigQuery `content_analysis` | 4 views: one answer per content question (step 7)                                          |
 
 - **The upload script:** `helpers/upload_data.sh` uploads each group's files, then its marker. It changes the cloud, so it never runs here.
@@ -88,7 +88,7 @@ cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"
 ```
 
-- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets, the 6 staging tables, the 3 service accounts and their 8 grants, and the function with its trigger against a mocked provider, checks their names, settings and scopes, then destroys them. Expected: `4 passed, 0 failed`.
+- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets, the 6 staging tables, the 3 cleaned views, the 3 service accounts and their 8 grants, and the function with its trigger against a mocked provider, checks their names, settings and scopes, then destroys them. Expected: `5 passed, 0 failed`.
 - **`pre-commit run --all-files`:** runs the general file checks, the Terraform hooks (`fmt`, `validate`, TFLint), the Ruff hooks and ShellCheck in one go.
 
 ### Python checks
@@ -129,3 +129,23 @@ python simulation/check_staging.py
 | `duplicate_keys`    | Does any `_id` appear twice?                                                        | 0                                         |
 | `orphan_references` | Does every category, tag, author and article category ID exist in its lookup table? | 0                                         |
 | `missing_titles`    | Does every post and article have a title? An empty title counts as missing          | 0                                         |
+
+### View checks (simulated)
+
+Creates the 3 cleaned views in the same emulator, then checks their rows against the staging tables. Run it after `check_staging.py`, with the emulator still running: it keeps the loaded tables in memory only.
+
+```bash
+# Terminal 2, after check_staging.py
+python simulation/check_views.py
+```
+
+- **The same SQL as Terraform:** the script fills in the templates in `terraform/modules/content_pipeline/templates/cleaned/` with the same values as `bigquery.tf`, then creates `blog_posts`, `articles` and `content`, in that order.
+- **Expected values from staging,** not fixed numbers. Expected: every row `ok`, exit code 0.
+
+| Check                  | View                     | Expected                                    |
+| ---------------------- | ------------------------ | ------------------------------------------- |
+| `row_count`            | `blog_posts`, `articles` | The staging table's row count (75, 12)      |
+| `distinct_ids`         | `blog_posts`, `articles` | The staging table's row count: no ID twice  |
+| `missing_article_text` | `articles`               | 0                                           |
+| `row_count`            | `content`                | Posts + articles (87)                       |
+| `empty_names`          | `content`                | 0 empty category or tag names               |

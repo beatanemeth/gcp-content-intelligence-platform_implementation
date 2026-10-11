@@ -1,0 +1,15 @@
+-- Cleaned articles: one row per article, with its category name.
+-- Terraform fills in the project and dataset names (templatefile()).
+-- articleText is already plain text: the function removed the HTML (step 3).
+SELECT
+  article._id AS id,
+  article.title,
+  article.lead,
+  article._createdDate AS created_date,
+  category.title AS category_title,
+  article.keywords,
+  article.articleText AS article_text
+FROM `${project}.${staging_dataset}.articles` AS article
+-- LEFT JOIN: an article without a category keeps its row, with no category title.
+LEFT JOIN `${project}.${staging_dataset}.article_categories` AS category
+  ON category._id = article.category

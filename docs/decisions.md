@@ -46,6 +46,10 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 | **`averageRating` as `FLOAT`:** every value is 0 today | A rating such as 4.5 would fail the whole load into an `INTEGER` column | None: `FLOAT` also accepts whole numbers |
 | **Data checks in SQL:** row counts, duplicate IDs, broken references, missing titles | BigQuery checks each row's shape, not the relations between rows | A manual step after each load (`bq query`) |
 | **No partitioning or clustering** | About 130 records; every query already costs the minimum | To add if the data grows to many GB |
+| **Cleaned layer as views, not tables** | A view stores no data and is up to date after every load; at about 130 records every query costs the minimum | Each query runs the joins again; to change into tables if the data grows |
+| **Categories and tags as nested lists** (`ARRAY` of `STRUCT`), one `ARRAY` subquery each | BigQuery's native model: one row per post, no bridge tables; a post without tags keeps its row; no row multiplication | A query on one tag needs `UNNEST` |
+| **View SQL in template files; only project and dataset placeholders** | The SQL reads as normal BigQuery SQL; the emulator check uses the same files | Table names inside the SQL are invisible to Terraform |
+| **`depends_on` per layer:** staging tables, then `blog_posts` and `articles`, then `content` in its own block | BigQuery checks a view's SQL at creation; Terraform sees no reference in a SQL string, and creates one `for_each` block's items in parallel | The order is written by hand; a new view must be added to it |
 
 <br>
 

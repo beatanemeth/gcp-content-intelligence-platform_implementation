@@ -28,6 +28,14 @@ locals {
     "article_categories",
   ])
 
+  # The cleaned views that read only staging tables, created together; each has
+  # its SQL in templates/cleaned/<name>.sql.tftpl. content reads these two, so it
+  # has its own block (bigquery.tf).
+  cleaned_views = toset([
+    "blog_posts",
+    "articles",
+  ])
+
   # One service account per job, so each gets only its own roles. The key becomes
   # the account's ID (content-<key>); the value is its display name.
   service_accounts = {
