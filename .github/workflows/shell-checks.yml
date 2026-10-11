@@ -1,0 +1,27 @@
+# Offline checks only: lints the shell scripts; runs none of them.
+name: Shell checks
+
+on:
+  pull_request:
+    paths:
+      - "helpers/*.sh"
+      - ".github/workflows/shell-checks.yml"
+  push:
+    branches: [main]
+    paths:
+      - "helpers/*.sh"
+      - ".github/workflows/shell-checks.yml"
+
+# The token can only read the repository.
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # ShellCheck is preinstalled on the runner.
+      - name: ShellCheck
+        run: shellcheck helpers/*.sh
