@@ -48,6 +48,7 @@ Every simulated result, in this file, `progress.md` or `README.md`, is labelled 
 | 5b   | The function, its trigger, the 8th grant, the upload script | `terraform apply`; `helpers/upload_data.sh`; the function's logs; `bq query` on the staging tables | `terraform test` with the mocked provider; pytest with fake clients and fake events; the upload script with fake `terraform` and `gcloud`; ShellCheck | 2026-10-11: 4 runs passed; 39 tests passed; upload order correct; ShellCheck reports nothing |
 | 6    | 3 cleaned views | `terraform apply`; `bq query` on each view | `terraform test` with the mocked provider; `check_views.py` on the BigQuery emulator | 2026-10-11: 5 runs passed; emulator: every check ok (75, 12 and 87 rows) |
 | 7    | 4 analysis views | `terraform apply`; `bq query` on each view | `terraform test` with the mocked provider; `check_views.py` on the BigQuery emulator; one hand check | 2026-10-11: 6 runs passed; emulator: every check ok (53, 89, 18 and 5 rows); hand check matches |
+| 8    | No code: the full dataset | The real run (step 9): upload `data/raw`, then `data_checks.sql` and the views | `main.py`, `check_staging.py --counts full` and `check_views.py --results` on the real exports, on a fresh emulator | 2026-10-11: counts as planned; emulator: every check ok (113, 18 and 131 rows; 64, 128, 27 and 5 view rows) |
 
 ### Mocked service accounts (step 5a)
 
@@ -73,9 +74,28 @@ The mocked provider gives every computed value a random string, but the provider
   grep -o 265c28ea-0879-4955-825f-f87c44df8a13 data/dummy/blogs/blog_posts.json | wc -l
   ```
 
-- **`--results <folder>`:** the CSV files hold emulator output, so they are simulated results. `.build/` is git-ignored; step 8 publishes the full dataset's results.
+- **`--results <folder>`:** the CSV files hold emulator output, so they are simulated results. `.build/` is git-ignored; the full dataset's results are in [`README.md`](../README.md#results-simulated) (step 8).
 
 **What the simulation cannot prove:** that real BigQuery gives the same numbers (time zones, `SPLIT`, window order on ties), and the real cost of each query. A real deployment (step 9) shows them.
+
+
+### The full dataset (step 8)
+
+The real Wix exports, in the git-ignored `data/raw/`, through the same commands as steps 3 to 7. Run on 2026-10-11.
+
+| Step | Command | Result (simulated) |
+| ---- | ------- | ------------------ |
+| Clean | `python terraform/modules/content_pipeline/files/function/main.py data/raw .build/ndjson` | 6 `INFO` lines, no `ERROR` |
+| Count | `wc -l .build/ndjson/*/*.ndjson` | 113, 9, 17, 8, 18 and 8 lines |
+| Staging | `python simulation/check_staging.py --counts full`, on a fresh emulator | All 18 checks `ok` |
+| Views | `python simulation/check_views.py --results .build/results-simulated` | All 11 checks `ok`; 4 CSV files |
+
+- **Fresh emulator:** it keeps tables in memory, so a container that held the dummy data is stopped first.
+- **Cases the dummy data does not have:** 2 posts without tags (`tagIds` empty), and all 113 still reach `blog_posts`; `empty_names` is 0, so every category name comes from `label`.
+- **The source total check:** this export states `_totalCount: 8` for its 8 members, so no `ERROR`. The plan expected a stated total of 9 from an older export.
+- **Publishing rule:** only the analysis views' results leave the laptop, in [`README.md`](../README.md#results-simulated), with author names replaced ("Author 1"). No record is copied.
+
+**What the simulation cannot prove:** that real BigQuery gives the same numbers on the full dataset. The real run (step 9) compares its views with these CSV files.
 
 <br>
 
@@ -97,7 +117,7 @@ python simulation/check_staging.py
 - **Same SQL as Terraform:** fills in `templates/cleaned/*.sql.tftpl` and `templates/analysis/*.sql.tftpl` with `string.Template(...).substitute(...)`: the same `${name}` syntax as `templatefile()`, and it also fails on a missing placeholder. The values match `local.sql_placeholders` in `bigquery.tf`.
 - **Terraform's order:** creates `content_cleaned` if missing, then `blog_posts`, `articles`, `content`; then `content_analysis` if missing, then the 4 analysis views. Each view is deleted and created again on every run, so a changed SQL file takes effect.
 - **Both checks always run:** the cleaned checks, then `has_rows`, so one report shows every failure; exit code 1 on any.
-- **Expected values from staging,** not fixed numbers, so the same script works for the full dataset (step 8).
+- **Expected values from staging,** not fixed numbers, so the same script works for the full dataset (step 8): 113, 18 and 131 rows.
 
 **`check_staging.py`:** loads the 6 NDJSON files with their schema files (`NEWLINE_DELIMITED_JSON`, `WRITE_TRUNCATE`, strict defaults), runs `helpers/data_checks.sql`, and exits with 1 on any mismatch. `--counts full` switches to the full dataset's counts (step 8).
 

@@ -33,12 +33,23 @@ The main decisions, with their reasons and costs, are in [docs/decisions.md](doc
 
 One view in `content_analysis` per question. Each SQL file opens with its question and the exact definition of its metric.
 
-| View                     | Question                                                                                                  | SQL technique       |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------- |
+| View                     | Question                                                                                                | SQL technique       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------- |
 | `content_per_month`      | How much content was published in each calendar month, per content type, and what is the running total? | Running total       |
-| `tag_frequency`          | Which tags and keywords are used most, per content type?                                                  | `CROSS JOIN UNNEST` |
-| `top_posts_per_category` | Which 3 posts have the most views in each category, and who wrote them?                                   | Ranking             |
-| `article_text_stats`     | How long are the articles on average, per category?                                                       | Text measure        |
+| `tag_frequency`          | Which tags and keywords are used most, per content type?                                                | `CROSS JOIN UNNEST` |
+| `top_posts_per_category` | Which 3 posts have the most views in each category, and who wrote them?                                 | Ranking             |
+| `article_text_stats`     | How long are the articles on average, per category?                                                     | Text measure        |
+
+### Results (simulated)
+
+The full dataset (113 blog posts, 18 articles) on the local BigQuery emulator, 2026-10-11. Author names replaced.
+
+| View                     | Main answer                                                                            |
+| ------------------------ | -------------------------------------------------------------------------------------- |
+| `content_per_month`      | Posts from 2019 to 2026, most in 2020 (33); articles since 2021                        |
+| `tag_frequency`          | Top blog tag: "Inspiring" (83 of 113 posts); top article keyword: "community" (5 of 18) |
+| `top_posts_per_category` | Most viewed: "The 8 Secrets of the 8-Step Espresso Routine" (4193 views); every top post by Author 1 |
+| `article_text_stats`     | 434 to 521 words on average per category: about 3 minutes' reading                     |
 
 ### Main technologies used
 
@@ -133,6 +144,7 @@ python simulation/check_staging.py
 - **The load:** each file goes into its staging table with the table's strict schema, as a real load would.
 - **The checks:** [helpers/data_checks.sql](helpers/data_checks.sql), one row per check and table. Expected: every row `ok`, exit code 0.
 - **A hanging script:** a stopped emulator looks like a slow query. Check `docker ps` first.
+- **`--counts full`:** expects the full dataset's counts (113, 9, 17, 8, 18 and 8). The real exports sit in the git-ignored `data/raw/` and are not in this repository; run `main.py data/raw .build/ndjson` first, on a fresh emulator.
 
 | Check               | Question                                                                            | Expected                                  |
 | ------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
@@ -155,11 +167,11 @@ python simulation/check_views.py --results .build/results-simulated   # also wri
 - **`--results <folder>`:** after the checks, writes `<folder>/<view>.csv` for each analysis view, with a header row. Simulated results; `.build/` is git-ignored.
 - **Expected values from staging,** not fixed numbers. Expected: every row `ok`, exit code 0.
 
-| Check                  | View                     | Expected                                    |
-| ---------------------- | ------------------------ | ------------------------------------------- |
-| `row_count`            | `blog_posts`, `articles` | The staging table's row count (75, 12)      |
-| `distinct_ids`         | `blog_posts`, `articles` | The staging table's row count: no ID twice  |
-| `missing_article_text` | `articles`               | 0                                           |
-| `row_count`            | `content`                | Posts + articles (87)                       |
-| `empty_names`          | `content`                | 0 empty category or tag names               |
-| `has_rows`             | Each analysis view       | At least 1 row                              |
+| Check                  | View                     | Expected                                   |
+| ---------------------- | ------------------------ | ------------------------------------------ |
+| `row_count`            | `blog_posts`, `articles` | The staging table's row count (75, 12)     |
+| `distinct_ids`         | `blog_posts`, `articles` | The staging table's row count: no ID twice |
+| `missing_article_text` | `articles`               | 0                                          |
+| `row_count`            | `content`                | Posts + articles (87)                      |
+| `empty_names`          | `content`                | 0 empty category or tag names              |
+| `has_rows`             | Each analysis view       | At least 1 row                             |
