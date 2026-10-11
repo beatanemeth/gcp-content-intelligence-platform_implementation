@@ -1,0 +1,21 @@
+-- Question: which tags and keywords are used most, per content type?
+--
+-- Metric:
+--   - uses: the number of items (blog posts or articles) that carry the tag.
+--     Blog posts carry tags, articles carry keywords; both are in content.tags.
+--   - Tags as written: "Massa" and "massa" are two tags.
+--   - "Used most": sort by uses when you query the view. A view keeps no row
+--     order, so an ORDER BY here would promise nothing.
+--
+-- Placeholders: Terraform fills in the project and the cleaned dataset
+-- (templatefile()).
+SELECT
+  item.content_type,
+  tag,
+  -- DISTINCT: a tag listed twice on one item still counts that item once.
+  COUNT(DISTINCT item.content_id) AS uses
+FROM `${project}.${cleaned_dataset}.content` AS item
+-- One row per item and tag. An item without tags has no row here: it has
+-- nothing to count, so dropping it is right.
+CROSS JOIN UNNEST(item.tags) AS tag
+GROUP BY item.content_type, tag

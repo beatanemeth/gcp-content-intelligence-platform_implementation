@@ -1,0 +1,34 @@
+-- Question: how much content was published in each calendar month (for example,
+-- January 2024), per content type, and what is the running total?
+--
+-- Metric:
+--   - publish_month: the first day of the month (DATE), in UTC. Each year's
+--     months are separate rows; a month without content has no row.
+--   - items_published: blog posts or articles published in that month. Articles
+--     have no publish date; their created date stands in (cleaned content view).
+--   - running_total: items published in this month and every earlier month, per
+--     content type.
+--
+-- Placeholders: Terraform fills in the project and the cleaned dataset
+-- (templatefile()).
+WITH monthly AS (
+  SELECT
+    DATE_TRUNC(DATE(published_at), MONTH) AS publish_month,
+    content_type,
+    COUNT(*) AS items_published
+  FROM `${project}.${cleaned_dataset}.content`
+  GROUP BY publish_month, content_type
+)
+
+SELECT
+  publish_month,
+  content_type,
+  items_published,
+  -- A window keeps one row per month and content type; GROUP BY would collapse
+  -- them into one row per content type.
+  SUM(items_published) OVER (
+    PARTITION BY content_type
+    ORDER BY publish_month
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  ) AS running_total
+FROM monthly
