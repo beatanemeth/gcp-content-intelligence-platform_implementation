@@ -1,0 +1,20 @@
+# Private data; only the dummy data is committed
+data/raw/
+
+# Project-specific values; the *.example files are committed instead
+terraform.tfvars
+backend.hcl
+
+# Terraform working files; the lock file stays committed
+.terraform/
+*.tfstate*
+# The module's lock file comes from terraform test; only the deployment's lock file decides versions
+terraform/modules/content_pipeline/.terraform.lock.hcl
+
+# Build output
+.build/
+
+# Python generated files
+__pycache__/
+.venv/
+.pytest_cache/
