@@ -70,3 +70,16 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 | **Python only unwraps and cleans:** all joins, renames and lookups are SQL (steps 6 and 7) | Every transformation stays visible and testable in BigQuery; the function needs one library | A change in the analysis needs SQL, not Python |
 | **A count mismatch logs an `ERROR` and goes on** | A retry cannot fix the source file; the loaded rows show what arrived | A cut-off export is loaded; someone must watch the `ERROR` logs |
 | **Every step overwrites its output (idempotent)** | A second run gives the same files and tables, with no duplicates | No history: an earlier output is gone |
+
+<br>
+
+## Function and trigger
+
+| Decision | Why | What it costs |
+| -------- | --- | ------------- |
+| **Upload from the laptop, not from the Wix API** | The exports already exist as files; no API key or scheduler in the cloud | A person runs `helpers/upload_data.sh`; nothing is automatic |
+| **A `_READY` marker per group, uploaded last in a separate command** | A group has several files; the marker says "complete", so the group is processed once, not once per file | 14 events per upload; 12 of them end at once |
+| **A Cloud Run function, built from source by Terraform** | Terraform zips, uploads and deploys the code; no image to build or push by hand | The first deploy needs Cloud Build, Artifact Registry and their grants |
+| **Events older than 15 minutes are dropped** | A retry keeps the original event time; an older event is a permanent failure, and returning without an error ends days of retries | A problem that lasts longer than 15 minutes needs a new upload |
+| **2 instances at most; internal ingress only** | Caps the cost; events rejected at the limit come back through retries. Only Eventarc can call the function, not the internet | A large upload waits for a free instance |
+| **No `time_sleep` after the grants** | Simpler code; a slow grant fails at most the first `apply` | The first real `apply` may need a second run |

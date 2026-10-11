@@ -74,10 +74,11 @@ pre-commit install                 # runs the hooks at every git commit
 
 | Command                                                   | Checks                                          | Step |
 | --------------------------------------------------------- | ----------------------------------------------- | ---- |
-| `pre-commit run --all-files`                              | File checks, Terraform and Ruff hooks; dummy data intact | 1, 2, 3 |
+| `pre-commit run --all-files`                              | File checks, Terraform, Ruff and ShellCheck hooks; dummy data intact | 1, 2, 3, 5b |
+| `pre-commit run shellcheck --all-files`                   | ShellCheck on `helpers/*.sh` (installed through pip) | 5b |
 | `git check-ignore -v data/raw/test.json terraform.tfvars` | Private files match a `.gitignore` line         | 1    |
 
-### Terraform checks (steps 2, 4, 5a)
+### Terraform checks (steps 2, 4, 5a, 5b)
 
 ```bash
 tflint --init --config "$(pwd)/.tflint.hcl"        # once: installs the pinned plugins
@@ -87,16 +88,16 @@ cd terraform/environments/dev
 terraform init -backend=false && terraform validate   # also validates the module
 
 cd ../../modules/content_pipeline
-terraform init -backend=false && terraform test       # simulated: mocked provider, 3 runs
+terraform init -backend=false && terraform test       # simulated: mocked provider, 4 runs
 
 cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"     # full path: one config for every folder
 ```
 
-### Python checks (steps 3, 4)
+### Python checks (steps 3, 4, 5b)
 
 ```bash
-pytest                                     # 26 tests on the dummy data
+pytest                                     # 39 tests; fake clients, no GCP
 ruff check && ruff format --check
 python terraform/modules/content_pipeline/files/function/main.py data/dummy .build/ndjson
 wc -l .build/ndjson/*/*.ndjson             # 75, 6, 11, 5, 12 and 5 lines

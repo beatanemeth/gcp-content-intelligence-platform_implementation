@@ -45,12 +45,22 @@ Every simulated result, in this file, `progress.md` or `README.md`, is labelled 
 | 3    | The cleaning functions    | None: already local                                        | None needed: pytest, Ruff, the command line                                   | Not simulated. 2026-10-11: 19 tests passed; 6 NDJSON files |
 | 4    | 3 datasets, 6 staging tables, data checks | `terraform apply`; `bq load`; `bq query --use_legacy_sql=false < helpers/data_checks.sql` | `terraform test` with the mocked provider; `check_staging.py` on the BigQuery emulator; `test_schemas.py` | 2026-10-11: 2 runs passed; 26 tests passed; emulator: every check ok |
 | 5a   | 3 service accounts, 7 grants | `terraform apply`; `gcloud projects get-iam-policy`; the function's first deploy (step 9) | `terraform test` with the mocked provider; `iam.tftest.hcl` checks each account's roles and scopes | 2026-10-11: 3 runs passed; TFLint reports nothing |
+| 5b   | The function, its trigger, the 8th grant, the upload script | `terraform apply`; `helpers/upload_data.sh`; the function's logs; `bq query` on the staging tables | `terraform test` with the mocked provider; pytest with fake clients and fake events; the upload script with fake `terraform` and `gcloud`; ShellCheck | 2026-10-11: 4 runs passed; 39 tests passed; upload order correct; ShellCheck reports nothing |
 
 ### Mocked service accounts (step 5a)
 
 The mocked provider gives every computed value a random string, but the provider checks an IAM member's format (`serviceAccount:...`) before any call, so the grants would fail. Every test file gives the mocked accounts a valid `member`: `mock_resource` with one value for all 3 in `storage` and `bigquery`; one `override_resource` per account in `iam`.
 
 **What the simulation cannot prove:** that the roles hold the permissions each job needs, IAM propagation delays (a new grant can take minutes to work), and that the build account's condition really lets the build read its code. A real deployment (step 9) shows them.
+
+### The function and its trigger (step 5b)
+
+- **`function.tftest.hcl`:** the `archive` provider is real, so the code is zipped on the laptop; only the Google provider is mocked. One `override_resource` per account gives each its own `id`, `email` and `member`, so a swapped account fails the test.
+- **Fake clients (`tests/function/test_handle_event.py`):** a fake bucket holds the dummy exports under `raw/<group>/` in a dict; the fake BigQuery client records each load, and its load job counts the lines of the processed file as loaded rows.
+- **Fake events:** `CloudEvent` objects with the attributes Eventarc sends (`type`, `source`, `time`) and the `bucket` and `name` data. Each test sets the event's age.
+- **Upload order (run once, not committed):** fake `terraform` and `gcloud` scripts first on `PATH`, which only print their arguments. Result: each group's files, then its marker. With a failing `gcloud`, the script stops before the marker.
+
+**What the simulation cannot prove:** real Eventarc delivery and retries, real load jobs, the function's real build, memory and timeout limits. A real deployment (step 9) shows them.
 
 <br>
 

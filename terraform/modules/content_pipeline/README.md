@@ -32,8 +32,9 @@ No defaults: a missing value stops `plan` at once.
 
 | Name               | Description                                                   |
 | ------------------ | ------------------------------------------------------------- |
-| `data_bucket_name` | Name of the data bucket; the upload script (step 5b) reads it |
+| `data_bucket_name` | Name of the data bucket; the upload script reads it           |
 | `dataset_ids`      | Dataset ID per layer: `staging`, `cleaned`, `analysis`        |
+| `function_name`    | Name of the function; filters its logs after an upload        |
 
 <br>
 
@@ -44,7 +45,7 @@ No defaults: a missing value stops `plan` at once.
 | Resource                       | Name                          | Holds                                                     |
 | ------------------------------ | ----------------------------- | --------------------------------------------------------- |
 | `google_storage_bucket.data`   | `<project_id>-content-data`   | Uploads (`raw/`) and the function's output (`processed/`) |
-| `google_storage_bucket.source` | `<project_id>-content-source` | The function's code zip (step 5b)                         |
+| `google_storage_bucket.source` | `<project_id>-content-source` | The function's code zip                                   |
 
 - **Both buckets:** uniform bucket-level access, public access prevention enforced, soft delete off, `force_destroy = true`.
 
@@ -87,7 +88,25 @@ Each role on the smallest scope that works; the project only when nothing smalle
 
 - **The build account's condition** (`content-build-code-buckets-only`): Google copies the source code into its own buckets (`gcf-v2-sources-...`, `gcf-v2-uploads-...`, `run-sources-...`), which exist only after the first deploy. The condition allows only those prefixes and the source bucket, so the grant cannot reach the data bucket or the state bucket.
 - **`*_iam_member` only:** each grant adds one member to one role. A `*_iam_binding` or `*_iam_policy` would remove the access that Team A or another feature has granted.
-- **`run.invoker`:** the trigger account's 8th grant targets the function's service, so it comes with the function (step 5b).
+- **`run.invoker`:** the trigger account's 8th grant targets the function's service, so it lives in `function.tf` (see below).
+
+### Function and trigger
+
+Terraform deploys the code itself: no manual `gcloud` step.
+
+| Resource                                                  | Name                                  | Does                                                    |
+| --------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------- |
+| `data.archive_file.function`                              | `.build/content-function.zip`         | Zips `files/function/` on the laptop, at `plan`         |
+| `google_storage_bucket_object.function_source`            | `function-source-<md5>.zip`           | Uploads the zip to the source bucket                    |
+| `google_cloudfunctions2_function.transform`               | `content-transform`                   | The Cloud Run function and its Eventarc trigger         |
+| `google_cloud_run_v2_service_iam_member.trigger_invoker`  | None                                  | `roles/run.invoker` for the trigger account on the function's service |
+
+- **The hash in the object name:** a code change gives a new name, so Terraform replaces the object and redeploys the function.
+- **Built from source:** `python314`, entry point `handle_event`; the build runs as `content-build` (by its `id`), the code as `content-runtime`, the trigger as `content-trigger`.
+- **Limits:** 0 to 2 instances, 256M, 300 seconds; `ALLOW_INTERNAL_ONLY`, so only Google Cloud (Eventarc) can reach it.
+- **Settings as environment variables:** `PROJECT_ID`, `STAGING_DATASET`, `BQ_LOCATION`; nothing hard-coded in `main.py`.
+- **The trigger:** `google.cloud.storage.object.v1.finalized` on the data bucket, retries on. It fires on every upload; `handle_event` processes only `raw/<group>/_READY` and drops an event older than 15 minutes, which ends the retries.
+- **`depends_on`:** the function waits for the project-level grants and the build account's code reader. A new grant can still take a minute in real GCP: if the first `apply` fails on a permission, run it again.
 
 ### Labels
 
@@ -112,9 +131,9 @@ The `dev` root module (`terraform/environments/dev/`) makes this call.
 
 ## Simulated test
 
-`tests/storage.tftest.hcl` (the buckets), `tests/bigquery.tftest.hcl` (the datasets and staging tables) and `tests/iam.tftest.hcl` (the service accounts and grants) run the module against a mocked `google` provider. Nothing reaches GCP.
+`tests/storage.tftest.hcl` (the buckets), `tests/bigquery.tftest.hcl` (the datasets and staging tables), `tests/iam.tftest.hcl` (the service accounts and grants) and `tests/function.tftest.hcl` (the function and trigger) run the module against a mocked `google` provider. Nothing reaches GCP. The `archive` provider is real: it zips the code on the laptop.
 
-- **The mocked `member`:** the provider checks an IAM member's format (`serviceAccount:...`) before any call, so the mocked accounts need a valid `member` instead of a random string. `storage` and `bigquery` give all 3 accounts one value (`mock_resource`); `iam` gives each account its own (`override_resource`), so it can tell which account got which role.
+- **The mocked `member`:** the provider checks an IAM member's format (`serviceAccount:...`) before any call, so the mocked accounts need a valid `member` instead of a random string. `storage` and `bigquery` give all 3 accounts one value (`mock_resource`); `iam` and `function` give each account its own (`override_resource`), so they can tell which account got which role or runs which job.
 
 ```bash
 cd terraform/modules/content_pipeline
