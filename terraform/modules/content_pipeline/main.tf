@@ -35,4 +35,17 @@ locals {
     trigger = "Content pipeline: event trigger"
     runtime = "Content pipeline: function runtime"
   }
+
+  # Roles that exist only at project level: no bucket or dataset can hold them.
+  # The key names the grant in the resource address.
+  project_roles = {
+    runtime_job_user = {
+      account = "runtime"
+      role    = "roles/bigquery.jobUser" # a job belongs to a project
+    }
+    trigger_event_receiver = {
+      account = "trigger"
+      role    = "roles/eventarc.eventReceiver"
+    }
+  }
 }
