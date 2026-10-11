@@ -38,3 +38,40 @@ The main decisions, with their reasons and costs, are in [docs/decisions.md](doc
 ### Operating system used
 
 - Linux Mint 21.2
+
+<br>
+
+## Run it yourself
+
+All commands run on the laptop and need no GCP credentials. Run them from the repository root unless noted.
+
+### Set-up
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements-dev.txt
+pre-commit install                            # runs the checks at every git commit
+tflint --init --config "$(pwd)/.tflint.hcl"   # installs the pinned TFLint plugins
+```
+
+### Terraform checks
+
+```bash
+terraform fmt -check -recursive terraform
+
+cd terraform/environments/dev
+terraform init -backend=false   # no state bucket, no login
+terraform validate              # also validates the module it calls
+
+cd ../../modules/content_pipeline
+terraform init -backend=false
+terraform test                  # simulated: mocked Google provider
+
+cd ../../..
+tflint --recursive --config "$(pwd)/.tflint.hcl"
+```
+
+- **`terraform test`:** creates the 2 buckets against a mocked provider, checks their names and settings, then destroys them. Expected: `1 passed, 0 failed`.
+- **`pre-commit run --all-files`:** runs the general file checks and the Terraform hooks (`fmt`, `validate`, TFLint) in one go.
