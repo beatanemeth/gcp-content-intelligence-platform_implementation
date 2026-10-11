@@ -89,3 +89,26 @@ resource "google_bigquery_table" "content" {
 
   depends_on = [google_bigquery_table.cleaned]
 }
+
+# One block for all 4: none reads another, so Terraform may create them in
+# parallel.
+resource "google_bigquery_table" "analysis" {
+  for_each = local.analysis_views
+
+  dataset_id = google_bigquery_dataset.layer["analysis"].dataset_id
+  project    = var.project_id
+  table_id   = each.key
+
+  view {
+    query          = templatefile("${path.module}/templates/analysis/${each.key}.sql.tftpl", local.sql_placeholders)
+    use_legacy_sql = false
+  }
+
+  deletion_protection = false
+
+  labels = local.labels
+
+  # The analysis views read both cleaned blocks (content, blog_posts, articles),
+  # so they wait for both.
+  depends_on = [google_bigquery_table.cleaned, google_bigquery_table.content]
+}
