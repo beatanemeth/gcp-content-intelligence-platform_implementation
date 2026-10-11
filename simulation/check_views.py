@@ -11,11 +11,17 @@ Run after check_staging.py, with the emulator still running: the emulator keeps
 the loaded staging tables in memory only.
 
     python simulation/check_views.py
+    python simulation/check_views.py --results .build/results-simulated
+
+--results also writes each analysis view to <folder>/<view>.csv, after the
+checks. The numbers come from the emulator: simulated results (step 8).
 
 The expected values come from the staging tables, not fixed numbers, so the same
 script works for the full dataset (step 8).
 """
 
+import argparse
+import csv
 import sys
 from pathlib import Path
 from string import Template
@@ -95,7 +101,28 @@ def report(check: str, view: str, result: int, passed: bool, expected: str) -> b
     return not passed
 
 
+def save_results(client: bigquery.Client, folder: Path) -> None:
+    """Write each analysis view to <folder>/<view>.csv, with a header row."""
+    folder.mkdir(parents=True, exist_ok=True)
+    for view in LAYERS["analysis"][1]:
+        # ORDER BY 1, 2: the first 2 columns are each view's key, so the file
+        # is the same on every run. A view itself keeps no row order.
+        result = client.query(
+            f"SELECT * FROM `{PROJECT}.{ANALYSIS}.{view}` ORDER BY 1, 2"
+        ).result()
+        path = folder / f"{view}.csv"
+        with path.open("w", newline="", encoding="utf-8") as file:
+            writer = csv.writer(file)
+            writer.writerow(field.name for field in result.schema)
+            writer.writerows(row.values() for row in result)
+        print(f"wrote {path}")
+
+
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--results", type=Path, metavar="FOLDER")
+    results = parser.parse_args().results
+
     client = bigquery.Client(
         project=PROJECT,
         credentials=AnonymousCredentials(),
@@ -171,6 +198,9 @@ def main() -> int:
     for view in LAYERS["analysis"][1]:
         rows = count(client, f"SELECT COUNT(*) FROM `{PROJECT}.{ANALYSIS}.{view}`")
         failed |= report("has_rows", view, rows, rows >= 1, ">= 1")
+
+    if results:
+        save_results(client, results)
 
     return 1 if failed else 0
 
