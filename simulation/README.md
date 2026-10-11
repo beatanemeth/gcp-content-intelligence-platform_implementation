@@ -34,3 +34,11 @@ Made up; they point to nothing real.
 ## Labelling rule
 
 Every simulated result, in this file, `progress.md` or `README.md`, is labelled as **simulated**. Later steps add their simulated checks below.
+
+<br>
+
+## Simulated checks
+
+| Step | What it builds            | Real check                                                 | Simulated check                                                               | Result (simulated)                               |
+| ---- | ------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------ |
+| 2    | The module, the 2 buckets | `terraform apply`, `terraform output`, `terraform destroy` | `fmt`, `validate`, TFLint; `terraform test` with the mocked `google` provider | 2026-10-11: 1 run passed; TFLint reports nothing |
