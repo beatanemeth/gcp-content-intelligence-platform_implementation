@@ -127,3 +127,45 @@ run "cleaned_views" {
     error_message = "Every cleaned view needs GoogleSQL, deletion_protection off and the feature and managed_by labels."
   }
 }
+
+run "analysis_views" {
+  command = apply
+
+  assert {
+    condition = toset([for t in google_bigquery_table.analysis : t.table_id]) == toset([
+      "content_per_month", "tag_frequency", "top_posts_per_category", "article_text_stats"
+    ])
+    error_message = "The analysis views must be content_per_month, tag_frequency, top_posts_per_category and article_text_stats."
+  }
+
+  assert {
+    condition = alltrue([
+      for t in google_bigquery_table.analysis :
+      t.dataset_id == "content_analysis" && t.project == "content-demo-sim"
+    ])
+    error_message = "Every analysis view must be in content_analysis."
+  }
+
+  assert {
+    # The analysis templates use only project and cleaned_dataset; templatefile()
+    # accepts extra keys, so the same map as in cleaned_views works.
+    condition = alltrue([
+      for t in google_bigquery_table.analysis :
+      t.view[0].query == templatefile("templates/analysis/${t.table_id}.sql.tftpl", {
+        project         = "content-demo-sim"
+        staging_dataset = "content_staging"
+        cleaned_dataset = "content_cleaned"
+      })
+    ])
+    error_message = "Every analysis view must use its own template, with the project and dataset names filled in."
+  }
+
+  assert {
+    condition = alltrue([
+      for t in google_bigquery_table.analysis :
+      !t.view[0].use_legacy_sql && !t.deletion_protection
+      && t.labels["feature"] == "content-pipeline" && t.labels["managed_by"] == "terraform"
+    ])
+    error_message = "Every analysis view needs GoogleSQL, deletion_protection off and the feature and managed_by labels."
+  }
+}
