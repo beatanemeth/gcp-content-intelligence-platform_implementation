@@ -14,6 +14,21 @@ Every design decision lives in the [planning repository](https://github.com/beat
 
 The main decisions, with their reasons and costs, are in [docs/decisions.md](docs/decisions.md).
 
+### How it works
+
+![Content pipeline overview](assets/content_pipeline_overview.png)
+
+| Stage          | Service                     | What happens                                                                               |
+| -------------- | --------------------------- | ------------------------------------------------------------------------------------------ |
+| **Upload**     | Upload script (laptop)      | The export files go to the data bucket, `raw/<group>/`; a `_READY` marker last             |
+| **Processing** | Cloud Run function          | Started by the marker; removes the Wix wrapper, cleans HTML, writes NDJSON to `processed/` |
+| **Staging**    | BigQuery `content_staging`  | 6 tables, loaded 1:1 from `processed/` with strict schemas                                 |
+| **Cleaning**   | BigQuery `content_cleaned`  | 3 views: names joined in, one row per post or article (step 6)                             |
+| **Analysis**   | BigQuery `content_analysis` | 4 views: one answer per content question (step 7)                                          |
+
+- **The upload script:** `helpers/upload_data.sh` uploads each group's files, then its marker. It changes the cloud, so it never runs here.
+- **2 meanings of "raw":** on the laptop, `data/dummy/` (made-up, committed) and `data/raw/` (the real exports, git-ignored); in the data bucket, `raw/` (the uploads) and `processed/` (the function's NDJSON).
+
 ### Main technologies used
 
 - **Infrastructure as code:** Terraform with the Google provider
@@ -73,13 +88,13 @@ cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"
 ```
 
-- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets, the 6 staging tables, the 3 service accounts and their 7 grants against a mocked provider, checks their names, settings and scopes, then destroys them. Expected: `3 passed, 0 failed`.
-- **`pre-commit run --all-files`:** runs the general file checks, the Terraform hooks (`fmt`, `validate`, TFLint) and the Ruff hooks in one go.
+- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets, the 6 staging tables, the 3 service accounts and their 8 grants, and the function with its trigger against a mocked provider, checks their names, settings and scopes, then destroys them. Expected: `4 passed, 0 failed`.
+- **`pre-commit run --all-files`:** runs the general file checks, the Terraform hooks (`fmt`, `validate`, TFLint), the Ruff hooks and ShellCheck in one go.
 
 ### Python checks
 
 ```bash
-pytest                # the cleaning functions on the dummy data
+pytest                # the cleaning and the entry point on the dummy data
 ruff check            # lint
 ruff format --check   # format
 
@@ -88,7 +103,7 @@ python terraform/modules/content_pipeline/files/function/main.py data/dummy .bui
 wc -l .build/ndjson/*/*.ndjson
 ```
 
-- **`pytest`:** unwraps and cleans the 6 dummy exports, then checks every cleaned record against its staging schema. Expected: `26 passed`.
+- **`pytest`:** unwraps and cleans the 6 dummy exports, then checks every cleaned record against its staging schema. Runs `handle_event` on fake upload events with fake Storage and BigQuery clients (simulated). Expected: `39 passed`.
 - **The command line:** expected line counts 75, 6, 11, 5, 12 and 5. A second run gives the same files.
 
 ### Staging checks (simulated)
@@ -108,9 +123,9 @@ python simulation/check_staging.py
 - **The checks:** [helpers/data_checks.sql](helpers/data_checks.sql), one row per check and table. Expected: every row `ok`, exit code 0.
 - **A hanging script:** a stopped emulator looks like a slow query. Check `docker ps` first.
 
-| Check               | Question                                                                   | Expected                                 |
-| ------------------- | -------------------------------------------------------------------------- | ---------------------------------------- |
-| `row_count`         | Did every record arrive?                                                   | The record counts: 75, 6, 11, 5, 12 and 5 |
-| `duplicate_keys`    | Does any `_id` appear twice?                                               | 0                                        |
-| `orphan_references` | Does every category, tag, author and article category ID exist in its lookup table? | 0                               |
-| `missing_titles`    | Does every post and article have a title? An empty title counts as missing | 0                                        |
+| Check               | Question                                                                            | Expected                                  |
+| ------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
+| `row_count`         | Did every record arrive?                                                            | The record counts: 75, 6, 11, 5, 12 and 5 |
+| `duplicate_keys`    | Does any `_id` appear twice?                                                        | 0                                         |
+| `orphan_references` | Does every category, tag, author and article category ID exist in its lookup table? | 0                                         |
+| `missing_titles`    | Does every post and article have a title? An empty title counts as missing          | 0                                         |

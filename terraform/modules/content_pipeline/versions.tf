@@ -8,5 +8,10 @@ terraform {
       source  = "hashicorp/google"
       version = ">= 8.0"
     }
+    # Zips the function's code on the laptop.
+    archive = {
+      source  = "hashicorp/archive"
+      version = ">= 2.0"
+    }
   }
 }

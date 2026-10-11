@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 5a (service accounts and grants) is in review. Next: step 5b (the function and its trigger).
+**2026-10-11:** step 5b (the function, its trigger and the upload script) is in review. Next: step 6 (the cleaned views).
 
 <br>
 
@@ -18,7 +18,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | #2      | `feature/terraform-skeleton`      | 2    |
 | #3      | `feature/python-cleaning`         | 3    |
 | #4      | `feature/bigquery-staging`        | 4    |
-| Pending | `feature/service-accounts`        | 5a   |
+| #5      | `feature/service-accounts`        | 5a   |
+| Pending | `feature/function-and-trigger`    | 5b   |
 
 <br>
 
@@ -104,8 +105,29 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
   - **The project-level grants in the IAM test:** checked as a set of `"<role> <member>"` pairs, so an extra, missing or swapped grant fails.
   - **`override_resource` per instance:** the plan's `google_service_account.pipeline["build"]` targets work; the Terraform docs do not mention instance keys, but the test proves each account gets its own `member`.
 
+### Step 5b: function, trigger, upload script
+
+- **Built:**
+  - **Module:** the `archive` provider (`>= 2.0`; `~> 2.8` in the root module, lock file `2.8.1`); `function.tf` with the zip, its upload (`function-source-<md5>.zip`), the `content-transform` function and its trigger, and the 8th grant (`run.invoker` for the trigger account); the `function_name` output, passed on in `environments/dev/outputs.tf`.
+  - **`main.py`:** `MARKER`, `MAX_EVENT_AGE`, `LOAD_CONFIG`; `ready_group`, `is_too_old`, `process_file` and `handle_event`. The function's `requirements.txt` adds `functions-framework==3.10.2`, `google-cloud-bigquery==3.46.1` and `google-cloud-storage==3.17.0`.
+  - **Checks:** `tests/function/test_handle_event.py` (7 tests, 13 runs); `tests/function.tftest.hcl`; `helpers/upload_data.sh`; `shellcheck-py` `v0.11.0.1-1` in pre-commit; the `Shell checks` workflow.
+- **Checked (simulated):**
+  - **`terraform test`:** 4 runs passed against the mocked provider; the real `archive` provider zips only `main.py` and `requirements.txt` (no `__pycache__`).
+  - **pytest:** 39 passed on Python 3.10.12, including `test_handle_event.py`.
+  - **Upload order:** with fake `terraform` and `gcloud` first on `PATH`, each group's files come before its marker; a failing `gcloud` stops the script before the marker; a missing group folder stops it with exit code 1.
+  - **`fmt`, `validate`, TFLint, Ruff, ShellCheck:** pass.
+  - **Proof that the test can fail:** run by the maintainer: `RETRY_POLICY_DO_NOT_RETRY` fails the function test. Undone.
+  - **Workflows:** not run yet; all 3 must be green on the pull request.
+- **Deviations:**
+  - **`Z` replaced by `+00:00` before `fromisoformat` (needed):** Cloud Storage writes the event time with a `Z`; Python 3.10 on the laptop cannot read it and raises `ValueError`, 3.11 and newer can. The plan assumed Python 3.14 everywhere.
+  - **`timezone.utc` with `# noqa: UP017` (needed):** Ruff targets `py314` and asks for `datetime.UTC`, which Python 3.10 does not have (added in 3.11). `timezone.utc` works on both.
+  - **`google-cloud-bigquery==3.46.1`, not 3.45.2 (kept):** step 4 already pinned 3.46.1; the plan's version was the newest when the plan was written. The pin moves from `requirements-dev.txt` to the function's `requirements.txt`.
+  - **`depends_on` on whole resources (simplification):** Terraform tracks a dependency on the whole resource, even when one instance is named. The function waits for all of `google_project_iam_member.pipeline` and for `build_code_reader`: the plan's 4 grants plus the runtime's `jobUser`, which does no harm.
+  - **One `override_resource` per account in `function.tftest.hcl` (needed):** the plan has `mock_resource` defaults plus an override for the trigger account only. With shared defaults, build and runtime get the same `id` and `email`, so a swapped account would still pass. Each account gets its own `id`, `email` and `member`, as in `iam.tftest.hcl`.
+  - **`upload_data.sh` changes to the repository root first:** the `terraform -chdir=...` path and the default `data/dummy` then work from any folder.
+
 <br>
 
 ## Open points
 
-- **The 2 meanings of "raw" in `README.md` (step 5b):** with the upload script, add a short data note: `data/dummy/` and `data/raw/` on the laptop; `raw/` and `processed/` in the bucket.
+- None.
