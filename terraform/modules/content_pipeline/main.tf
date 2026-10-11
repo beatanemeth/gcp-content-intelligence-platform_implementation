@@ -27,4 +27,12 @@ locals {
     "articles",
     "article_categories",
   ])
+
+  # One service account per job, so each gets only its own roles. The key becomes
+  # the account's ID (content-<key>); the value is its display name.
+  service_accounts = {
+    build   = "Content pipeline: function build"
+    trigger = "Content pipeline: event trigger"
+    runtime = "Content pipeline: function runtime"
+  }
 }
