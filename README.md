@@ -4,6 +4,16 @@ This repository rebuilds a local Docker and Jupyter project, the [Wix Content In
 
 Every design decision lives in the [planning repository](https://github.com/beatanemeth/gcp-content-intelligence-platform_planning); this repository implements it.
 
+> **Simulation only:** no real GCP is used. Every check runs on the laptop, and every simulated result is labelled as simulated. See [simulation/README.md](simulation/README.md).
+
+### The story
+
+- **Part A (the platform):** a company already runs a shared GCP platform with the project, billing, the enabled APIs and the Terraform state bucket.
+- **Part B (the feature):** the content pipeline is a new feature on that platform, delivered as a standalone Terraform module.
+- **Ownership rule:** a resource that a second feature would need belongs to Part A; everything else belongs to Part B, which changes nothing in Part A.
+
+The main decisions, with their reasons and costs, are in [docs/decisions.md](docs/decisions.md).
+
 ### Main technologies used
 
 - **Infrastructure as code:** Terraform with the Google provider
