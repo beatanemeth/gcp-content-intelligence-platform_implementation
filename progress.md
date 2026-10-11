@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 8 (the full dataset run) is in review. Next: step 9, part 1 (`docs/runbook`: the Part A stand-in script and the runbook).
+**2026-10-11:** step 9, part 1 (the Part A stand-in script and the runbook) is in review. Next: step 9, part 2 (`ops/real-deployment`): the real run, once a real GCP project exists.
 
 <br>
 
@@ -22,7 +22,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | #6      | `feature/function-and-trigger`    | 5b   |
 | #7      | `feature/cleaned-views`           | 6    |
 | #8      | `feature/analysis-views`          | 7    |
-| Pending | `docs/full-dataset-run`           | 8    |
+| #9      | `docs/full-dataset-run`           | 8    |
+| Pending | `docs/runbook`                    | 9, part 1 |
 
 <br>
 
@@ -180,6 +181,23 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 - **Deviations:**
   - **No `ERROR` for `members` (data, not code):** the plan expected 8 records against a stated total of 9. This export states `_totalCount: 8`, so the totals match and `unwrap` logs nothing. `test_main.py` still covers the mismatch path.
   - **`CLAUDE.md` gets the repository layout as built:** `helpers/bootstrap.sh` and `docs/runbook.md` are marked as step 9.
+
+### Step 9, part 1: Part A stand-in and runbook
+
+- **Built:**
+  - **`helpers/bootstrap.sh`:** the Part A stand-in. Creates the project, the billing link, the 11 APIs, a budget (`<project-id>-budget`, 10 per month, alerts at 50, 90 and 100 %), the state bucket `<project-id>-tfstate`, and the Cloud Storage service agent's `roles/pubsub.publisher`. Each step checks for its result first, or is a no-op.
+  - **`docs/runbook.md`:** "Runbook for real GCP", marked "never run": the plan's 11 commands and 3 notes.
+  - **Docs:** the runbook link in `README.md`; "The real Part A" in `simulation/README.md`; the stand-in decision in `docs/decisions.md`; the layout in `CLAUDE.md`.
+- **Checked:**
+  - **ShellCheck** (pre-commit hook): reports nothing.
+  - **Flags** checked against the `gcloud` reference: `billing budgets create`, `storage buckets create` and `update`, `storage service-agent`, `functions logs read`. `gcloud` is not installed on the laptop, so no `--help` check.
+  - **Runbook names match the code:** `content-transform`, `europe-west1`, `terraform/environments/dev/`, `backend.hcl`, `terraform.tfvars`, `helpers/data_checks.sql`, `helpers/upload_data.sh`.
+  - **Never run:** no command touched GCP.
+- **Deviations:**
+  - **Order: billing, then the APIs, then the budget (needed):** the plan lists the budget (3) before the APIs (4). Most APIs need billing, and the budget call needs the Billing Budget API enabled first.
+  - **`--billing-project` on the budget commands (needed):** the Billing Budget API is charged to a quota project; this points it at the new project, where the API is enabled.
+  - **Versioning with `buckets update`, on every run (needed):** `gcloud storage buckets create` has no versioning flag.
+  - **`--calendar-period=month` (explicit):** the reference states no default.
 
 <br>
 
