@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 4 (BigQuery datasets, staging tables, data checks) is in review. Next: step 5a (service accounts and grants).
+**2026-10-11:** step 5a (service accounts and grants) is in review. Next: step 5b (the function and its trigger).
 
 <br>
 
@@ -17,7 +17,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | #1      | `chore/repository-and-dummy-data` | 1    |
 | #2      | `feature/terraform-skeleton`      | 2    |
 | #3      | `feature/python-cleaning`         | 3    |
-| Pending | `feature/bigquery-staging`        | 4    |
+| #4      | `feature/bigquery-staging`        | 4    |
+| Pending | `feature/service-accounts`        | 5a   |
 
 <br>
 
@@ -87,6 +88,21 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
   - **`missing_titles` also counts an empty title:** `title IS NULL OR TRIM(title) = ''`.
   - **`tomap()` in the test assertions:** a `{ ... }` literal and a `{ for ... }` expression are objects; an object never equals a map, so the first `terraform test` failed on the `dataset_ids` output.
   - **Python 3.10 warning:** the Google libraries print a `FutureWarning` (Python 3.10 is past end of life). Harmless; it goes away with Python 3.11 or newer.
+
+### Step 5a: service accounts and grants
+
+- **Built:**
+  - **Module:** the `service_accounts` and `project_roles` locals; `iam.tf` with the 3 accounts (`content-build`, `content-trigger`, `content-runtime`) and 7 grants, all `*_iam_member`: `objectUser` on the data bucket, `dataEditor` on `content_staging`, 4 project-level roles, and the build account's `objectViewer` with the `content-build-code-buckets-only` condition.
+  - **Checks:** `tests/iam.tftest.hcl`; `storage.tftest.hcl` and `bigquery.tftest.hcl` give the mocked accounts a valid `member`.
+- **Checked (simulated):**
+  - **`terraform test`:** 3 runs passed against the mocked provider.
+  - **Proof that the test can fail:** the runtime account's `dataEditor` on `content_cleaned` fails the IAM test ("The runtime account needs dataEditor on content_staging only."). Undone.
+  - **`fmt`, `validate`, TFLint:** pass; TFLint reports nothing.
+  - **Workflow:** not run yet; it must be green on the pull request.
+- **Deviations:**
+  - **Names not in the plan:** the `project_roles` keys (`runtime_job_user`, `trigger_event_receiver`, `build_artifact_writer`, `build_log_writer`), the grant resources (`runtime_data`, `runtime_staging`, `build_code_reader`) and 2 display names (`Content pipeline: event trigger`, `Content pipeline: function runtime`).
+  - **The project-level grants in the IAM test:** checked as a set of `"<role> <member>"` pairs, so an extra, missing or swapped grant fails.
+  - **`override_resource` per instance:** the plan's `google_service_account.pipeline["build"]` targets work; the Terraform docs do not mention instance keys, but the test proves each account gets its own `member`.
 
 <br>
 

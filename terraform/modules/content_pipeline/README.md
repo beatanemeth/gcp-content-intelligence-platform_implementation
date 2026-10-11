@@ -63,6 +63,32 @@ One dataset per layer (medallion pattern), in `var.region`, the data bucket's lo
 - **`destroy` removes everything:** `delete_contents_on_destroy = true` on the datasets, `deletion_protection = false` on the tables.
 - **No partitioning or clustering:** about 130 records; every query already costs the minimum.
 
+### Service accounts and grants
+
+One service account per job, so a bug or a leak in one job opens only that job's doors. No keys: Google issues a short-lived token on each run.
+
+| Resource                                       | Account ID        | Job                                                  |
+| ---------------------------------------------- | ----------------- | ---------------------------------------------------- |
+| `google_service_account.pipeline["build"]`    | `content-build`   | Turns the function's source code into a running service |
+| `google_service_account.pipeline["trigger"]`  | `content-trigger` | Delivers the "file uploaded" event to the function   |
+| `google_service_account.pipeline["runtime"]`  | `content-runtime` | Runs the function: reads uploads, writes NDJSON, loads BigQuery |
+
+Each role on the smallest scope that works; the project only when nothing smaller exists.
+
+| Account | Role                            | Scope                                | Allows                                            |
+| ------- | ------------------------------- | ------------------------------------ | ------------------------------------------------- |
+| runtime | `roles/storage.objectUser`      | Data bucket                          | Read `raw/`, overwrite `processed/`; the load job reads `processed/` |
+| runtime | `roles/bigquery.dataEditor`     | `content_staging`                    | Replace the staging tables' rows                  |
+| runtime | `roles/bigquery.jobUser`        | Project                              | Start load jobs: a job belongs to a project       |
+| trigger | `roles/eventarc.eventReceiver`  | Project                              | Receive events: no smaller scope exists           |
+| build   | `roles/artifactregistry.writer` | Project                              | Push the built image                              |
+| build   | `roles/logging.logWriter`       | Project                              | Write the build logs                              |
+| build   | `roles/storage.objectViewer`    | Project, with a condition            | Read the source code only                         |
+
+- **The build account's condition** (`content-build-code-buckets-only`): Google copies the source code into its own buckets (`gcf-v2-sources-...`, `gcf-v2-uploads-...`, `run-sources-...`), which exist only after the first deploy. The condition allows only those prefixes and the source bucket, so the grant cannot reach the data bucket or the state bucket.
+- **`*_iam_member` only:** each grant adds one member to one role. A `*_iam_binding` or `*_iam_policy` would remove the access that Team A or another feature has granted.
+- **`run.invoker`:** the trigger account's 8th grant targets the function's service, so it comes with the function (step 5b).
+
 ### Labels
 
 - **On every resource that supports them:** `feature = "content-pipeline"`, `managed_by = "terraform"`. The datasets add `layer = "<layer>"`, so the bill shows the cost per layer.
@@ -86,7 +112,9 @@ The `dev` root module (`terraform/environments/dev/`) makes this call.
 
 ## Simulated test
 
-`tests/storage.tftest.hcl` (the buckets) and `tests/bigquery.tftest.hcl` (the datasets and staging tables) run the module against a mocked `google` provider. Nothing reaches GCP.
+`tests/storage.tftest.hcl` (the buckets), `tests/bigquery.tftest.hcl` (the datasets and staging tables) and `tests/iam.tftest.hcl` (the service accounts and grants) run the module against a mocked `google` provider. Nothing reaches GCP.
+
+- **The mocked `member`:** the provider checks an IAM member's format (`serviceAccount:...`) before any call, so the mocked accounts need a valid `member` instead of a random string. `storage` and `bigquery` give all 3 accounts one value (`mock_resource`); `iam` gives each account its own (`override_resource`), so it can tell which account got which role.
 
 ```bash
 cd terraform/modules/content_pipeline
