@@ -1,8 +1,17 @@
 """Clean the Wix exports: remove the wrapper and write NDJSON for BigQuery."""
 
 import json
+import sys
+from pathlib import Path
 
 from bs4 import BeautifulSoup
+
+# The 6 exports, by group. A missing file fails loudly instead of silently
+# shrinking the group.
+GROUPS = {
+    "blogs": ["blog_posts", "blog_categories", "blog_tags", "members"],
+    "articles": ["articles", "article_categories"],
+}
 
 # The record key and its total key of each wrapped export.
 ENVELOPES = [("_items", "_totalCount"), ("items", "totalCount")]
@@ -47,3 +56,27 @@ def transform(name: str, data: list | dict) -> list[dict]:
             for record in records
         ]
     return records
+
+
+def to_ndjson(records: list[dict]) -> str:
+    """Write one JSON record per line: the format BigQuery loads."""
+    # ensure_ascii=False keeps accented letters as they are, not as \u00e9.
+    return "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records)
+
+
+def process_folder(source: Path, target: Path) -> None:
+    """Write <target>/<group>/<name>.ndjson for each export in GROUPS."""
+    for group, names in GROUPS.items():
+        (target / group).mkdir(parents=True, exist_ok=True)
+        for name in names:
+            raw = (source / group / f"{name}.json").read_text(encoding="utf-8")
+            records = transform(name, json.loads(raw))
+            # Overwrite, never append: a second run gives the same files.
+            output = target / group / f"{name}.ndjson"
+            output.write_text(to_ndjson(records), encoding="utf-8")
+            log("INFO", f"{group}/{name}: {len(records)} records written")
+
+
+if __name__ == "__main__":
+    # python main.py <source folder> <target folder>
+    process_folder(Path(sys.argv[1]), Path(sys.argv[2]))
