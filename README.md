@@ -24,10 +24,21 @@ The main decisions, with their reasons and costs, are in [docs/decisions.md](doc
 | **Processing** | Cloud Run function          | Started by the marker; removes the Wix wrapper, cleans HTML, writes NDJSON to `processed/` |
 | **Staging**    | BigQuery `content_staging`  | 6 tables, loaded 1:1 from `processed/` with strict schemas                                 |
 | **Cleaning**   | BigQuery `content_cleaned`  | 3 views: names joined in, one row per post or article                                      |
-| **Analysis**   | BigQuery `content_analysis` | 4 views: one answer per content question (step 7)                                          |
+| **Analysis**   | BigQuery `content_analysis` | 4 views: one answer per content question                                                   |
 
 - **The upload script:** `helpers/upload_data.sh` uploads each group's files, then its marker. It changes the cloud, so it never runs here.
 - **2 meanings of "raw":** on the laptop, `data/dummy/` (made-up, committed) and `data/raw/` (the real exports, git-ignored); in the data bucket, `raw/` (the uploads) and `processed/` (the function's NDJSON).
+
+### The 4 questions
+
+One view in `content_analysis` per question. Each SQL file opens with its question and the exact definition of its metric.
+
+| View                     | Question                                                                                                  | SQL technique       |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------- |
+| `content_per_month`      | How much content was published in each calendar month, per content type, and what is the running total? | Running total       |
+| `tag_frequency`          | Which tags and keywords are used most, per content type?                                                  | `CROSS JOIN UNNEST` |
+| `top_posts_per_category` | Which 3 posts have the most views in each category, and who wrote them?                                   | Ranking             |
+| `article_text_stats`     | How long are the articles on average, per category?                                                       | Text measure        |
 
 ### Main technologies used
 
@@ -88,7 +99,7 @@ cd ../../..
 tflint --recursive --config "$(pwd)/.tflint.hcl"
 ```
 
-- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets, the 6 staging tables, the 3 cleaned views, the 3 service accounts and their 8 grants, and the function with its trigger against a mocked provider, checks their names, settings and scopes, then destroys them. Expected: `5 passed, 0 failed`.
+- **`terraform test`:** creates the 2 buckets, the 3 BigQuery datasets, the 6 staging tables, the 3 cleaned views, the 4 analysis views, the 3 service accounts and their 8 grants, and the function with its trigger against a mocked provider, checks their names, settings and scopes, then destroys them. Expected: `6 passed, 0 failed`.
 - **`pre-commit run --all-files`:** runs the general file checks, the Terraform hooks (`fmt`, `validate`, TFLint), the Ruff hooks and ShellCheck in one go.
 
 ### Python checks
@@ -132,14 +143,16 @@ python simulation/check_staging.py
 
 ### View checks (simulated)
 
-Creates the 3 cleaned views in the same emulator, then checks their rows against the staging tables. Run it after `check_staging.py`, with the emulator still running: it keeps the loaded tables in memory only.
+Creates the 3 cleaned views and the 4 analysis views in the same emulator. Checks the cleaned views' rows against the staging tables, and that every analysis view returns rows. Run it after `check_staging.py`, with the emulator still running: it keeps the loaded tables in memory only.
 
 ```bash
 # Terminal 2, after check_staging.py
 python simulation/check_views.py
+python simulation/check_views.py --results .build/results-simulated   # also writes each analysis view as CSV
 ```
 
-- **The same SQL as Terraform:** the script fills in the templates in `terraform/modules/content_pipeline/templates/cleaned/` with the same values as `bigquery.tf`, then creates `blog_posts`, `articles` and `content`, in that order.
+- **The same SQL as Terraform:** the script fills in the templates in `terraform/modules/content_pipeline/templates/` with the same values as `bigquery.tf`. It creates `blog_posts`, `articles` and `content`, then the 4 analysis views: Terraform's order.
+- **`--results <folder>`:** after the checks, writes `<folder>/<view>.csv` for each analysis view, with a header row. Simulated results; `.build/` is git-ignored.
 - **Expected values from staging,** not fixed numbers. Expected: every row `ok`, exit code 0.
 
 | Check                  | View                     | Expected                                    |
@@ -149,3 +162,4 @@ python simulation/check_views.py
 | `missing_article_text` | `articles`               | 0                                           |
 | `row_count`            | `content`                | Posts + articles (87)                       |
 | `empty_names`          | `content`                | 0 empty category or tag names               |
+| `has_rows`             | Each analysis view       | At least 1 row                              |

@@ -47,6 +47,7 @@ Every simulated result, in this file, `progress.md` or `README.md`, is labelled 
 | 5a   | 3 service accounts, 7 grants | `terraform apply`; `gcloud projects get-iam-policy`; the function's first deploy (step 9) | `terraform test` with the mocked provider; `iam.tftest.hcl` checks each account's roles and scopes | 2026-10-11: 3 runs passed; TFLint reports nothing |
 | 5b   | The function, its trigger, the 8th grant, the upload script | `terraform apply`; `helpers/upload_data.sh`; the function's logs; `bq query` on the staging tables | `terraform test` with the mocked provider; pytest with fake clients and fake events; the upload script with fake `terraform` and `gcloud`; ShellCheck | 2026-10-11: 4 runs passed; 39 tests passed; upload order correct; ShellCheck reports nothing |
 | 6    | 3 cleaned views | `terraform apply`; `bq query` on each view | `terraform test` with the mocked provider; `check_views.py` on the BigQuery emulator | 2026-10-11: 5 runs passed; emulator: every check ok (75, 12 and 87 rows) |
+| 7    | 4 analysis views | `terraform apply`; `bq query` on each view | `terraform test` with the mocked provider; `check_views.py` on the BigQuery emulator; one hand check | 2026-10-11: 6 runs passed; emulator: every check ok (53, 89, 18 and 5 rows); hand check matches |
 
 ### Mocked service accounts (step 5a)
 
@@ -63,6 +64,19 @@ The mocked provider gives every computed value a random string, but the provider
 
 **What the simulation cannot prove:** real Eventarc delivery and retries, real load jobs, the function's real build, memory and timeout limits. A real deployment (step 9) shows them.
 
+### The analysis views (step 7)
+
+- **`has_rows`:** the analysis views have no staging number to match, so the check is that each returns at least 1 row. An empty answer means a broken join or filter.
+- **Hand check (run once):** the tag "Massa" has `uses` 59 in `tag_frequency`; its `_id` appears 59 times in `data/dummy/blogs/blog_posts.json`:
+
+  ```bash
+  grep -o 265c28ea-0879-4955-825f-f87c44df8a13 data/dummy/blogs/blog_posts.json | wc -l
+  ```
+
+- **`--results <folder>`:** the CSV files hold emulator output, so they are simulated results. `.build/` is git-ignored; step 8 publishes the full dataset's results.
+
+**What the simulation cannot prove:** that real BigQuery gives the same numbers (time zones, `SPLIT`, window order on ties), and the real cost of each query. A real deployment (step 9) shows them.
+
 <br>
 
 ## BigQuery emulator
@@ -78,10 +92,11 @@ docker run --rm -p 9050:9050 ghcr.io/goccy/bigquery-emulator:0.8.1 \
 python simulation/check_staging.py
 ```
 
-**`check_views.py`** (step 6): run after `check_staging.py`, with the emulator still running; it keeps the loaded tables in memory only.
+**`check_views.py`** (steps 6 and 7): run after `check_staging.py`, with the emulator still running; it keeps the loaded tables in memory only.
 
-- **Same SQL as Terraform:** fills in `templates/cleaned/*.sql.tftpl` with `string.Template(...).substitute(...)`: the same `${name}` syntax as `templatefile()`, and it also fails on a missing placeholder. The values match `local.sql_placeholders` in `bigquery.tf`.
-- **Terraform's order:** creates `content_cleaned` if missing, then `blog_posts`, `articles`, `content`. Each view is deleted and created again on every run, so a changed SQL file takes effect.
+- **Same SQL as Terraform:** fills in `templates/cleaned/*.sql.tftpl` and `templates/analysis/*.sql.tftpl` with `string.Template(...).substitute(...)`: the same `${name}` syntax as `templatefile()`, and it also fails on a missing placeholder. The values match `local.sql_placeholders` in `bigquery.tf`.
+- **Terraform's order:** creates `content_cleaned` if missing, then `blog_posts`, `articles`, `content`; then `content_analysis` if missing, then the 4 analysis views. Each view is deleted and created again on every run, so a changed SQL file takes effect.
+- **Both checks always run:** the cleaned checks, then `has_rows`, so one report shows every failure; exit code 1 on any.
 - **Expected values from staging,** not fixed numbers, so the same script works for the full dataset (step 8).
 
 **`check_staging.py`:** loads the 6 NDJSON files with their schema files (`NEWLINE_DELIMITED_JSON`, `WRITE_TRUNCATE`, strict defaults), runs `helpers/data_checks.sql`, and exits with 1 on any mismatch. `--counts full` switches to the full dataset's counts (step 8).
@@ -91,7 +106,7 @@ python simulation/check_staging.py
 | Quirk                                                                                    | Handling                                                                         |
 | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Creating an existing dataset answers `500`, not `409`; the client retries for 10 minutes | The emulator creates `content_staging` at start (`--dataset`); the script never creates it |
-| A repeated `--dataset` flag keeps only the last value                                    | Only `content_staging` at start; step 6 creates the other 2 datasets in its script |
+| A repeated `--dataset` flag keeps only the last value                                    | Only `content_staging` at start; `check_views.py` creates the other 2 datasets |
 | A stopped container looks like a slow query, not an error                               | When a script hangs, check `docker ps` first                                     |
 | A path quoted in 2 parts (`` `project.dataset`.table ``) never returns; real BigQuery accepts it | `check_views.py` quotes the whole path; the templates already do                 |
 

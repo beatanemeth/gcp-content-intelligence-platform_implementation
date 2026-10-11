@@ -57,7 +57,7 @@ One dataset per layer (medallion pattern), in `var.region`, the data bucket's lo
 | -------------------------------------------- | ------------------ | -------------------------------------------------- |
 | `google_bigquery_dataset.layer["staging"]`  | `content_staging`  | The data as delivered: the 6 staging tables        |
 | `google_bigquery_dataset.layer["cleaned"]`  | `content_cleaned`  | Prepared data: the 3 cleaned views                 |
-| `google_bigquery_dataset.layer["analysis"]` | `content_analysis` | Answers, as views (step 7)                         |
+| `google_bigquery_dataset.layer["analysis"]` | `content_analysis` | Answers: the 4 analysis views                      |
 
 - **Staging tables:** `google_bigquery_table.staging`, one per NDJSON file and with the same name: `blog_posts`, `blog_categories`, `blog_tags`, `members`, `articles`, `article_categories`.
 - **Strict schemas:** `files/schemas/<table>.json`, with the Wix field names unchanged. `REQUIRED` only for `_id`; arrays `REPEATED`; nested objects `RECORD`; dates `TIMESTAMP`. A wrong type or an unknown field fails the load.
@@ -78,6 +78,21 @@ Views in `content_cleaned`: no stored data; each runs its SQL on every query, so
 - **Categories and tags as nested lists** (`ARRAY` of `STRUCT`) in `blog_posts`: one row per post, no bridge tables.
 - **`use_legacy_sql = false`:** the API's default is legacy SQL.
 - **`depends_on`:** BigQuery checks a view's SQL at creation, so the staging tables come first, then `blog_posts` and `articles`, then `content`, which reads the other two and therefore has its own block.
+
+### Analysis views
+
+Views in `content_analysis`, one question each. They read only the cleaned views, never staging: the joins and renames are done once, in the cleaned layer.
+
+| Resource                                                    | View                     | Reads        | One row per                                  |
+| ----------------------------------------------------------- | ------------------------ | ------------ | -------------------------------------------- |
+| `google_bigquery_table.analysis["content_per_month"]`      | `content_per_month`      | `content`    | Month and content type, with a running total |
+| `google_bigquery_table.analysis["tag_frequency"]`          | `tag_frequency`          | `content`    | Content type and tag, with its uses          |
+| `google_bigquery_table.analysis["top_posts_per_category"]` | `top_posts_per_category` | `blog_posts` | Category and rank (1 to 3)                   |
+| `google_bigquery_table.analysis["article_text_stats"]`     | `article_text_stats`     | `articles`   | Article category, with average length        |
+
+- **SQL in templates:** `templates/analysis/<view>.sql.tftpl`. Each file opens with its question, the definition of each metric and its edge cases. The same placeholders map as the cleaned views; these files use only `${project}` and `${cleaned_dataset}`.
+- **One block for all 4:** none reads another, so Terraform may create them in parallel.
+- **`depends_on`:** both cleaned blocks (`cleaned` and `content`), since the analysis views read all 3 cleaned views.
 
 ### Service accounts and grants
 

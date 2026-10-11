@@ -50,6 +50,10 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 | **Categories and tags as nested lists** (`ARRAY` of `STRUCT`), one `ARRAY` subquery each | BigQuery's native model: one row per post, no bridge tables; a post without tags keeps its row; no row multiplication | A query on one tag needs `UNNEST` |
 | **View SQL in template files; only project and dataset placeholders** | The SQL reads as normal BigQuery SQL; the emulator check uses the same files | Table names inside the SQL are invisible to Terraform |
 | **`depends_on` per layer:** staging tables, then `blog_posts` and `articles`, then `content` in its own block | BigQuery checks a view's SQL at creation; Terraform sees no reference in a SQL string, and creates one `for_each` block's items in parallel | The order is written by hand; a new view must be added to it |
+| **One question and one SQL technique per analysis view,** with its metric defined in the file header | A number without a definition cannot be checked; each view shows something the others do not (running total, `UNNEST`, ranking, text measure) | 4 files to keep in step with their headers |
+| **Analysis views read only the cleaned views** | The joins and renames live in one place | A change in a cleaned view can change every answer |
+| **Views only, no Dataform or dbt** | 7 views that store nothing; Terraform already creates them | No built-in assertions or lineage; worth it once tables are rebuilt on a schedule or loaded incrementally |
+| **`ROW_NUMBER`, not `RANK`, with a tie-breaker** (earlier post, then ID) | Exactly 3 rows per category, the same on every run | A tie at rank 3 drops one of the tied posts |
 
 <br>
 
