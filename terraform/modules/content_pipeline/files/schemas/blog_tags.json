@@ -1,0 +1,10 @@
+[
+  {"name": "_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "_createdDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "_updatedDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "label", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "slug", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "language", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "postCount", "type": "INTEGER", "mode": "NULLABLE"},
+  {"name": "publishedPostCount", "type": "INTEGER", "mode": "NULLABLE"}
+]

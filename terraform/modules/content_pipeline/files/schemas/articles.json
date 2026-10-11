@@ -1,0 +1,19 @@
+[
+  {"name": "_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "_owner", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "_createdDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "_updatedDate", "type": "TIMESTAMP", "mode": "NULLABLE"},
+  {"name": "title", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "lead", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "articleText", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "metaDescription", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "keywords", "type": "STRING", "mode": "REPEATED"},
+  {"name": "articleSlug", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "articleLink", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "knowledgeBaseLink", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "category", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "categorySlug", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "categoryLink", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "picture", "type": "STRING", "mode": "NULLABLE"},
+  {"name": "manualSort", "type": "STRING", "mode": "NULLABLE"}
+]
