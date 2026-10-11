@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from main import unwrap
+from main import clean_html, transform, unwrap
 
 DUMMY = Path(__file__).parents[2] / "data" / "dummy"
 
@@ -47,3 +47,40 @@ def test_unwrap_cut_off_export_logs_error(capsys):
 def test_unwrap_unknown_shape_raises():
     with pytest.raises(ValueError, match="unknown export shape"):
         unwrap("other", {"rows": []})
+
+
+def test_clean_html_gives_one_line_of_words():
+    html = "<p>Lorem <strong>ipsum</strong>Dolor</p>\n<ul><li>sit</li></ul>"
+
+    assert clean_html(html) == "Lorem ipsum Dolor sit"
+
+
+def test_clean_html_decodes_entities():
+    assert clean_html("<p>Salt&amp;pepper&nbsp;mix</p>") == "Salt&pepper mix"
+
+
+def test_clean_html_on_dummy_articles():
+    for record in transform("articles", load("articles", "articles")):
+        text = record["articleText"]
+        assert text
+        for unwanted in ("<", ">", "\n", "  "):
+            assert unwanted not in text
+
+
+def test_transform_cleans_only_article_text():
+    original = unwrap("articles", load("articles", "articles"))
+    cleaned = transform("articles", load("articles", "articles"))
+
+    for before, after in zip(original, cleaned, strict=True):
+        assert after["articleText"] != before["articleText"]
+        assert {**after, "articleText": None} == {**before, "articleText": None}
+
+
+@pytest.mark.parametrize(
+    ("group", "name", "count"),
+    [row for row in DUMMY_COUNTS if row[1] != "articles"],
+)
+def test_transform_leaves_other_files_unchanged(group, name, count):
+    data = load(group, name)
+
+    assert transform(name, data) == unwrap(name, data)

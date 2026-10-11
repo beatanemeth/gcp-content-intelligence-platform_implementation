@@ -2,6 +2,8 @@
 
 import json
 
+from bs4 import BeautifulSoup
+
 # The record key and its total key of each wrapped export.
 ENVELOPES = [("_items", "_totalCount"), ("items", "totalCount")]
 
@@ -24,3 +26,24 @@ def unwrap(name: str, data: list | dict) -> list[dict]:
                 log("ERROR", f"{name}: {len(records)} records, the export says {total}")
             return records
     raise ValueError(f"{name}: unknown export shape")
+
+
+def clean_html(html: str) -> str:
+    """Turn an article's HTML body into one line of plain text."""
+    # The space separator: without it, <strong>Lorem</strong>Ipsum becomes LoremIpsum.
+    text = BeautifulSoup(html, "html.parser").get_text(" ")
+    # split() with no argument splits on any whitespace: spaces, line breaks and \xa0.
+    return " ".join(text.split())
+
+
+def transform(name: str, data: list | dict) -> list[dict]:
+    """Turn one Wix export into clean records: unwrap every file; for the
+    articles, also turn the HTML body into text."""
+    records = unwrap(name, data)
+    if name == "articles":
+        # A copy of each record with only articleText replaced.
+        records = [
+            {**record, "articleText": clean_html(record["articleText"])}
+            for record in records
+        ]
+    return records
