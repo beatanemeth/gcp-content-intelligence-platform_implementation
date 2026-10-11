@@ -38,11 +38,37 @@ resource "google_bigquery_dataset_iam_member" "runtime_staging" {
   member     = google_service_account.pipeline["runtime"].member
 }
 
-# Runtime: start load jobs. Trigger: receive events from Eventarc.
+# Runtime: start load jobs. Trigger: receive events from Eventarc. Build: push
+# the built image and write the build logs.
 resource "google_project_iam_member" "pipeline" {
   for_each = local.project_roles
 
   project = var.project_id
   role    = each.value.role
   member  = google_service_account.pipeline[each.value.account].member
+}
+
+# Build: read the function's source code. Google copies it into its own buckets
+# (gcf-v2-sources-..., gcf-v2-uploads-..., run-sources-...), which exist only
+# after the first deploy, so no bucket-level grant is possible. A plain
+# project-level objectViewer would also reach the data bucket and Team A's state
+# bucket; the condition limits it to the code buckets.
+resource "google_project_iam_member" "build_code_reader" {
+  project = var.project_id
+  role    = "roles/storage.objectViewer"
+  member  = google_service_account.pipeline["build"].member
+
+  # IAM checks the CEL expression on every request; an object's name has the
+  # form projects/_/buckets/<bucket>/objects/<object>. The trailing / after the
+  # source bucket matches that bucket only, not one whose name starts the same.
+  condition {
+    title       = "content-build-code-buckets-only"
+    description = "Read objects in the function's code buckets only."
+    expression  = <<-EOT
+      resource.name.startsWith("projects/_/buckets/gcf-v2-sources-") ||
+      resource.name.startsWith("projects/_/buckets/gcf-v2-uploads-") ||
+      resource.name.startsWith("projects/_/buckets/run-sources-") ||
+      resource.name.startsWith("projects/_/buckets/${google_storage_bucket.source.name}/")
+    EOT
+  }
 }

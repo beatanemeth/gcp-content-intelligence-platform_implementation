@@ -47,5 +47,13 @@ locals {
       account = "trigger"
       role    = "roles/eventarc.eventReceiver"
     }
+    build_artifact_writer = {
+      account = "build"
+      role    = "roles/artifactregistry.writer" # Google creates the repository at the first deploy
+    }
+    build_log_writer = {
+      account = "build"
+      role    = "roles/logging.logWriter" # logs are written per project
+    }
   }
 }
