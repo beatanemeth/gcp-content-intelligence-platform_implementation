@@ -29,6 +29,26 @@ Made up; they point to nothing real.
 | **Data bucket**   | `content-demo-sim-content-data`   |
 | **Source bucket** | `content-demo-sim-content-source` |
 
+### The real Part A (step 9)
+
+For a real deployment, [`helpers/bootstrap.sh`](../helpers/bootstrap.sh) stands in for Team A. Run once, by hand; it is never run here.
+
+```bash
+PROJECT_ID=<project-id> BILLING_ACCOUNT=<billing-account-id> helpers/bootstrap.sh
+```
+
+| Order | Creates                                   | Why in this order                                     |
+| ----- | ----------------------------------------- | ----------------------------------------------------- |
+| 1     | The project; Team B's `Owner` comes with it | Everything else lives in it                         |
+| 2     | The billing link                          | Most APIs need billing                                |
+| 3     | The 10 APIs and the Billing Budget API    | The budget call needs its API enabled                 |
+| 4     | A budget: 10 per month, alerts at 50, 90 and 100 % | Guards the cost; alerts only, never stops spending |
+| 5     | The state bucket `<project-id>-tfstate`: `europe-west1`, versioning, uniform access, public access prevention | `terraform init` needs it |
+| 6     | `roles/pubsub.publisher` for the Cloud Storage service agent | Eventarc's Cloud Storage trigger needs it |
+
+- **Safe to run again:** each step checks whether its result exists, or is a no-op when it does.
+- **Then Part B:** [docs/runbook.md](../docs/runbook.md), step 3.
+
 <br>
 
 ## Labelling rule
@@ -49,6 +69,7 @@ Every simulated result, in this file, `progress.md` or `README.md`, is labelled 
 | 6    | 3 cleaned views | `terraform apply`; `bq query` on each view | `terraform test` with the mocked provider; `check_views.py` on the BigQuery emulator | 2026-10-11: 5 runs passed; emulator: every check ok (75, 12 and 87 rows) |
 | 7    | 4 analysis views | `terraform apply`; `bq query` on each view | `terraform test` with the mocked provider; `check_views.py` on the BigQuery emulator; one hand check | 2026-10-11: 6 runs passed; emulator: every check ok (53, 89, 18 and 5 rows); hand check matches |
 | 8    | No code: the full dataset | The real run (step 9): upload `data/raw`, then `data_checks.sql` and the views | `main.py`, `check_staging.py --counts full` and `check_views.py --results` on the real exports, on a fresh emulator | 2026-10-11: counts as planned; emulator: every check ok (113, 18 and 131 rows; 64, 128, 27 and 5 view rows) |
+| 9    | Part A stand-in script, runbook | `helpers/bootstrap.sh`, then [docs/runbook.md](../docs/runbook.md) | ShellCheck only: the script changes the cloud | 2026-10-11: ShellCheck reports nothing; never run |
 
 ### Mocked service accounts (step 5a)
 

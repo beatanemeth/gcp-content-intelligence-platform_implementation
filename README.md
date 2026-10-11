@@ -4,7 +4,7 @@ This repository rebuilds a local Docker and Jupyter project, the [Wix Content In
 
 Every design decision lives in the [planning repository](https://github.com/beatanemeth/gcp-content-intelligence-platform_planning); this repository implements it.
 
-> **Simulation only:** no real GCP is used. Every check runs on the laptop, and every simulated result is labelled as simulated. See [simulation/README.md](simulation/README.md).
+> **Simulation only:** no real GCP is used. Every check runs on the laptop, and every simulated result is labelled as simulated. See [simulation/README.md](simulation/README.md). The steps for a real deployment, not run yet, are in [docs/runbook.md](docs/runbook.md).
 
 ### The story
 

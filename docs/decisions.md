@@ -11,6 +11,7 @@ The main design decisions, one table per topic. The full reasoning lives in the 
 | **Part A and Part B:** the platform (Part A) is separate from the pipeline feature (Part B)    | Mirrors a real company: a platform team runs the shared basics; a feature team adds to them | Part B depends on values it does not create; they must be handed over and agreed |
 | **Ownership rule:** "Would a second feature need it?" Yes: Part A. No: Part B                  | One clear test decides where each resource belongs                                          | Shared items such as the enabled APIs stay outside the module                    |
 | **Part B changes nothing in Part A:** it only adds its own resources and permissions           | The feature can be added and removed without risk to other features                         | The module cannot enable APIs or fix a missing platform setting itself           |
+| **Part A stand-in as a `gcloud` script, not Terraform:** `helpers/bootstrap.sh` | Part A is not this project's code; the script only has to produce its result, with no state to manage | No plan or drift check for Part A; each step checks for itself whether its result exists |
 
 <br>
 

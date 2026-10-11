@@ -76,11 +76,11 @@ As built; the planned layout is in `rebuild_plan/step-0_overview.md`.
 │   │   ├── templates/analysis/     # *.sql.tftpl
 │   │   └── tests/                  # *.tftest.hcl, mocked Google provider
 │   └── environments/dev/           # the root module: provider, backend, module call
-├── helpers/                        # upload_data.sh, data_checks.sql; bootstrap.sh (step 9)
+├── helpers/                        # upload_data.sh, data_checks.sql, bootstrap.sh (Part A stand-in)
 ├── simulation/                     # check_staging.py, check_views.py, README.md
 ├── tests/function/                 # pytest for the function code
 ├── data/                           # dummy/ committed; raw/ git-ignored
-├── docs/                           # decisions.md; runbook.md (step 9)
+├── docs/                           # decisions.md; runbook.md (real GCP, never run)
 ├── assets/                         # the pipeline diagram
 ├── .github/workflows/              # 3 offline CI workflows
 └── progress.md                     # build log and deviations
