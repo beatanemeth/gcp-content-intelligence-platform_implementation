@@ -1,0 +1,59 @@
+# Offline checks only: no GCP credentials, no backend, a mocked provider.
+name: Terraform checks
+
+on:
+  pull_request:
+    paths:
+      - "terraform/**"
+      - ".tflint.hcl"
+      - ".github/workflows/terraform-checks.yml"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - ".tflint.hcl"
+      - ".github/workflows/terraform-checks.yml"
+
+# The token can only read the repository.
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Same versions as the laptop.
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.16.x"
+
+      - uses: terraform-linters/setup-tflint@v6
+        with:
+          tflint_version: v0.64.0
+
+      - name: Format
+        run: terraform fmt -check -recursive
+        working-directory: terraform
+
+      # Validating the root module also validates the module it calls.
+      - name: Validate
+        working-directory: terraform/environments/dev
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+      - name: Test (mocked provider)
+        working-directory: terraform/modules/content_pipeline
+        run: |
+          terraform init -backend=false -input=false
+          terraform test
+
+      - name: TFLint
+        env:
+          # tflint --init downloads the plugins from GitHub; the token avoids its rate limit.
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          tflint --init --config "$(pwd)/.tflint.hcl"
+          tflint --recursive --config "$(pwd)/.tflint.hcl"
