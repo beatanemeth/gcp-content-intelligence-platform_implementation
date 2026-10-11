@@ -89,3 +89,14 @@ resource "google_cloudfunctions2_function" "transform" {
     google_project_iam_member.build_code_reader,
   ]
 }
+
+# The 8th grant: the trigger account may call the function. It targets the Cloud
+# Run service behind the function, which exists only after the function; the
+# reference also makes Terraform create the grant after the function.
+resource "google_cloud_run_v2_service_iam_member" "trigger_invoker" {
+  project  = var.project_id
+  location = var.region
+  name     = google_cloudfunctions2_function.transform.service_config[0].service
+  role     = "roles/run.invoker"
+  member   = google_service_account.pipeline["trigger"].member
+}
