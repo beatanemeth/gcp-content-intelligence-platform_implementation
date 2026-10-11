@@ -6,7 +6,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Status
 
-**2026-10-11:** step 7 (the analysis views) is in review. Next: step 8 (the full dataset).
+**2026-10-11:** step 8 (the full dataset run) is in review. Next: step 9, part 1 (`docs/runbook`: the Part A stand-in script and the runbook).
 
 <br>
 
@@ -21,7 +21,8 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 | #5      | `feature/service-accounts`        | 5a   |
 | #6      | `feature/function-and-trigger`    | 5b   |
 | #7      | `feature/cleaned-views`           | 6    |
-| Pending | `feature/analysis-views`          | 7    |
+| #8      | `feature/analysis-views`          | 7    |
+| Pending | `docs/full-dataset-run`           | 8    |
 
 <br>
 
@@ -163,6 +164,22 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
   - **`top_posts_per_category` partitions by category ID, not label:** two categories with the same label stay separate. The plan says "per category" without naming the column.
   - **`report()` in `check_views.py`:** one helper prints every check's line, so the cleaned checks (equal to a number) and `has_rows` (at least 1) share one format.
   - **`--results` sorts by the first 2 columns (`ORDER BY 1, 2`):** a view keeps no row order; in each view the first 2 columns identify a row, so the CSV files are the same on every run.
+
+### Step 8: full dataset run
+
+- **Built:** no code. The 6 real exports in the git-ignored `data/raw/`; the same commands as steps 3 to 7.
+- **Checked (simulated), 2026-10-11:**
+  - **Private files:** `git status` shows nothing under `data/raw/` or `.build/`.
+  - **`main.py data/raw .build/ndjson`:** 6 `INFO` lines, no `ERROR`, exit code 0.
+  - **Counts:** 113 posts, 9 categories, 17 tags, 8 members, 18 articles, 8 article categories, as in the plan.
+  - **`check_staging.py --counts full`** on a fresh emulator: all 18 checks `ok`, exit code 0.
+  - **`check_views.py --results .build/results-simulated`:** all 11 checks `ok`, exit code 0: 113 posts, 18 articles, 131 content rows, `empty_names` 0. `has_rows`: 64, 128, 27 and 5 rows.
+  - **Hidden cases:** 2 posts without tags; `blog_posts` still has 113 rows. `empty_names` 0: the category names come from `label`.
+  - **CSV files:** 4 in `.build/results-simulated/`; git ignores them. The running totals end at 113 posts and 18 articles; the article categories add up to 18.
+  - **Results:** in `README.md` under "Results (simulated)", with the author name replaced.
+- **Deviations:**
+  - **No `ERROR` for `members` (data, not code):** the plan expected 8 records against a stated total of 9. This export states `_totalCount: 8`, so the totals match and `unwrap` logs nothing. `test_main.py` still covers the mismatch path.
+  - **`CLAUDE.md` gets the repository layout as built:** `helpers/bootstrap.sh` and `docs/runbook.md` are marked as step 9.
 
 <br>
 

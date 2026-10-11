@@ -56,6 +56,38 @@ Paths are relative to the planning repository. `rebuild_plan/` holds the reviewe
 
 <br>
 
+## Repository layout
+
+As built; the planned layout is in `rebuild_plan/step-0_overview.md`.
+
+```text
+.
+├── terraform/
+│   ├── modules/content_pipeline/   # Part B: the module
+│   │   ├── main.tf                 # shared names, labels, view lists (locals)
+│   │   ├── storage.tf              # data and source buckets
+│   │   ├── bigquery.tf             # 3 datasets, 6 staging tables, 3 cleaned and 4 analysis views
+│   │   ├── iam.tf                  # 3 service accounts, 8 grants
+│   │   ├── function.tf             # zip, content-transform function, trigger
+│   │   ├── variables.tf, outputs.tf, versions.tf, README.md
+│   │   ├── files/function/         # main.py, requirements.txt
+│   │   ├── files/schemas/          # one JSON schema per staging table
+│   │   ├── templates/cleaned/      # *.sql.tftpl
+│   │   ├── templates/analysis/     # *.sql.tftpl
+│   │   └── tests/                  # *.tftest.hcl, mocked Google provider
+│   └── environments/dev/           # the root module: provider, backend, module call
+├── helpers/                        # upload_data.sh, data_checks.sql; bootstrap.sh (step 9)
+├── simulation/                     # check_staging.py, check_views.py, README.md
+├── tests/function/                 # pytest for the function code
+├── data/                           # dummy/ committed; raw/ git-ignored
+├── docs/                           # decisions.md; runbook.md (step 9)
+├── assets/                         # the pipeline diagram
+├── .github/workflows/              # 3 offline CI workflows
+└── progress.md                     # build log and deviations
+```
+
+<br>
+
 ## Commands
 
 Run from the repository root unless noted. Each step adds its own commands. Cloud-changing commands are never listed here; see "Cloud safety" in `.claude/rules/engineer.md`.
@@ -117,6 +149,20 @@ python simulation/check_staging.py        # every check ok, exit code 0
 python simulation/check_views.py          # after check_staging.py; every check ok, exit code 0
 python simulation/check_views.py --results .build/results-simulated   # also writes 4 CSV files
 ```
+
+### Full dataset run (step 8)
+
+The real exports in the git-ignored `data/raw/`; a fresh emulator, so no dummy rows remain.
+
+```bash
+git status --short data/raw                # nothing
+python terraform/modules/content_pipeline/files/function/main.py data/raw .build/ndjson   # 6 INFO lines
+wc -l .build/ndjson/*/*.ndjson             # 113, 9, 17, 8, 18 and 8 lines
+python simulation/check_staging.py --counts full
+python simulation/check_views.py --results .build/results-simulated
+```
+
+- **Publishing rule:** only the analysis views' results leave the laptop, labelled as simulated, with author names replaced ("Author 1"). Never the records.
 
 <br>
 
