@@ -3,16 +3,10 @@ name: Terraform checks
 
 on:
   pull_request:
-    paths:
-      - "terraform/**"
-      - ".tflint.hcl"
-      - ".github/workflows/terraform-checks.yml"
+    paths-ignore: ["**/*.md"]
   push:
     branches: [main]
-    paths:
-      - "terraform/**"
-      - ".tflint.hcl"
-      - ".github/workflows/terraform-checks.yml"
+    paths-ignore: ["**/*.md"]
 
 # The token can only read the repository.
 permissions:

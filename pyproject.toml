@@ -10,6 +10,8 @@ pythonpath = ["terraform/modules/content_pipeline/files/function"]
 target-version = "py314"
 # Import sorting treats main as own code, not as a third-party library.
 src = [".", "terraform/modules/content_pipeline/files/function"]
+# Docs hold no Python code blocks, and CI skips docs-only changes.
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 # Defaults (E, F), plus import order (I), likely bugs (B) and modern syntax (UP).

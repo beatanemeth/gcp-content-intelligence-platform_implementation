@@ -3,14 +3,10 @@ name: Shell checks
 
 on:
   pull_request:
-    paths:
-      - "helpers/*.sh"
-      - ".github/workflows/shell-checks.yml"
+    paths-ignore: ["**/*.md"]
   push:
     branches: [main]
-    paths:
-      - "helpers/*.sh"
-      - ".github/workflows/shell-checks.yml"
+    paths-ignore: ["**/*.md"]
 
 # The token can only read the repository.
 permissions:
