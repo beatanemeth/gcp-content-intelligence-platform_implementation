@@ -33,6 +33,9 @@ override_resource {
 variables {
   project_id = "content-demo-sim"
   region     = "europe-west1"
+
+  # Relative to the module folder, where terraform test runs.
+  function_source_dir = "files/function"
 }
 
 run "function_and_trigger" {

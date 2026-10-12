@@ -7,3 +7,8 @@ variable "region" {
   type        = string
   description = "GCP region for every regional resource, for example europe-west1."
 }
+
+variable "function_source_dir" {
+  type        = string
+  description = "Folder with the function's main.py and requirements.txt; zipped at plan."
+}

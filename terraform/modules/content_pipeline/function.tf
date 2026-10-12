@@ -1,6 +1,6 @@
 data "archive_file" "function" {
   type        = "zip"
-  source_dir  = "${path.module}/files/function"
+  source_dir  = var.function_source_dir
   output_path = "${path.root}/.build/content-function.zip"
   excludes    = ["__pycache__"]
 }
