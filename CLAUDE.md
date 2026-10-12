@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Purpose:** a portfolio project: a hands-on **Terraform** and **GCP** build. It rebuilds a local Docker and Jupyter project ([Wix Content Intelligence Pipeline](https://github.com/beatanemeth/Wix-Content-Intelligence-Pipeline)) as a cloud data pipeline.
 - **Implementation:** this repository holds the code: Terraform, Python, SQL, shell scripts and CI workflows.
 - **Plan:** every design decision lives in the planning repository ([GitHub](https://github.com/beatanemeth/gcp-content-intelligence-platform_planning); local clone at `../gcp-content-intelligence-platform_planning/`). This repository implements it; it does not re-decide it.
-- **Progress:** `progress.md` records the merged branches, the steps done, the deviations from the plan and the next step. Read it at the start of a session.
+- **Progress:** `docs/for_AI/progress.md` records the merged branches, the steps done, the deviations from the plan and the next step. Read it at the start of a session.
 
 <br>
 
@@ -21,7 +21,7 @@ Imagine a company that already runs a GCP platform. This project adds a **new fe
   - The shared foundation, applied once and kept. It holds everything that more than one feature uses.
   - Part A is **never built here**. Part B is built against the values Part A would hand over (`content-demo-sim`, `europe-west1`, `content-demo-sim-tfstate`).
   - Part B assumes Part A already did these: billing linked to the project, the 10 APIs enabled, the Cloud Storage service agent's `roles/pubsub.publisher`, `Owner` for Team B.
-  - For the real deployment, a `gcloud` script (`helpers/bootstrap.sh`, step 9) stands in for Part A.
+  - For the real deployment, a `gcloud` script (`scripts/bootstrap.sh`) stands in for Part A.
 - **Part B: the _feature_ (Team B, the maintainer).**
   - The content **pipeline** as a standalone module, added to Part A without changing it.
   - It creates everything only the pipeline uses: buckets, the function and its trigger, BigQuery datasets, tables and views, and its own service accounts with their roles.
@@ -70,20 +70,22 @@ As built; the planned layout is in `rebuild_plan/step-0_overview.md`.
 │   │   ├── iam.tf                  # 3 service accounts, 8 grants
 │   │   ├── function.tf             # zip, content-transform function, trigger
 │   │   ├── variables.tf, outputs.tf, versions.tf, README.md
-│   │   ├── files/function/         # main.py, requirements.txt
-│   │   ├── files/schemas/          # one JSON schema per staging table
+│   │   ├── schemas/                # one JSON schema per staging table
 │   │   ├── templates/cleaned/      # *.sql.tftpl
 │   │   ├── templates/analysis/     # *.sql.tftpl
 │   │   └── tests/                  # *.tftest.hcl, mocked Google provider
 │   └── environments/dev/           # the root module: provider, backend, module call
-├── helpers/                        # upload_data.sh, data_checks.sql, bootstrap.sh (Part A stand-in)
-├── simulation/                     # check_staging.py, check_views.py, README.md
-├── tests/function/                 # pytest for the function code
+├── function/                       # main.py, requirements.txt: the function code
+├── scripts/                        # upload_data.sh, data_checks.sql, bootstrap.sh (Part A stand-in)
+├── tests/
+│   ├── README.md                   # what the simulation proves and where it stops
+│   ├── function/                   # pytest for the function code
+│   └── simulation/                 # check_staging.py, check_views.py (BigQuery emulator)
 ├── data/                           # dummy/ committed; raw/ git-ignored
 ├── docs/                           # decisions.md; runbook.md (real GCP, never run)
+│   └── for_AI/progress.md          # build log and deviations
 ├── assets/                         # the pipeline diagram
-├── .github/workflows/              # 3 offline CI workflows
-└── progress.md                     # build log and deviations
+└── .github/workflows/              # 3 offline CI workflows
 ```
 
 <br>
@@ -104,11 +106,11 @@ pre-commit install                 # runs the hooks at every git commit
 
 ### Checks
 
-| Command                                                   | Checks                                          | Step |
-| --------------------------------------------------------- | ----------------------------------------------- | ---- |
+| Command                                                   | Checks                                                               | Step        |
+| --------------------------------------------------------- | -------------------------------------------------------------------- | ----------- |
 | `pre-commit run --all-files`                              | File checks, Terraform, Ruff and ShellCheck hooks; dummy data intact | 1, 2, 3, 5b |
-| `pre-commit run shellcheck --all-files`                   | ShellCheck on `helpers/*.sh` (installed through pip) | 5b |
-| `git check-ignore -v data/raw/test.json terraform.tfvars` | Private files match a `.gitignore` line         | 1    |
+| `pre-commit run shellcheck --all-files`                   | ShellCheck on `scripts/*.sh` (installed through pip)                 | 5b          |
+| `git check-ignore -v data/raw/test.json terraform.tfvars` | Private files match a `.gitignore` line                              | 1           |
 
 ### Terraform checks (steps 2, 4, 5a, 5b, 6, 7)
 
@@ -131,7 +133,7 @@ tflint --recursive --config "$(pwd)/.tflint.hcl"     # full path: one config for
 ```bash
 pytest                                     # 39 tests; fake clients, no GCP
 ruff check && ruff format --check
-python terraform/modules/content_pipeline/files/function/main.py data/dummy .build/ndjson
+python function/main.py data/dummy .build/ndjson
 wc -l .build/ndjson/*/*.ndjson             # 75, 6, 11, 5, 12 and 5 lines
 ```
 
@@ -145,9 +147,9 @@ docker run --rm -p 9050:9050 ghcr.io/goccy/bigquery-emulator:0.8.1 \
     --project=content-demo-sim --dataset=content_staging
 
 # Terminal 2
-python simulation/check_staging.py        # every check ok, exit code 0
-python simulation/check_views.py          # after check_staging.py; every check ok, exit code 0
-python simulation/check_views.py --results .build/results-simulated   # also writes 4 CSV files
+python tests/simulation/check_staging.py        # every check ok, exit code 0
+python tests/simulation/check_views.py          # after check_staging.py; every check ok, exit code 0
+python tests/simulation/check_views.py --results .build/results-simulated   # also writes 4 CSV files
 ```
 
 ### Full dataset run (step 8)
@@ -156,10 +158,10 @@ The real exports in the git-ignored `data/raw/`; a fresh emulator, so no dummy r
 
 ```bash
 git status --short data/raw                # nothing
-python terraform/modules/content_pipeline/files/function/main.py data/raw .build/ndjson   # 6 INFO lines
+python function/main.py data/raw .build/ndjson   # 6 INFO lines
 wc -l .build/ndjson/*/*.ndjson             # 113, 9, 17, 8, 18 and 8 lines
-python simulation/check_staging.py --counts full
-python simulation/check_views.py --results .build/results-simulated
+python tests/simulation/check_staging.py --counts full
+python tests/simulation/check_views.py --results .build/results-simulated
 ```
 
 - **Publishing rule:** only the analysis views' results leave the laptop, labelled as simulated, with author names replaced ("Author 1"). Never the records.

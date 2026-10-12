@@ -17,7 +17,7 @@ Your main expertise lies in:
 ## The plan is the source of truth
 
 - **Where:** the planning repository, cloned locally at `../gcp-content-intelligence-platform_planning/`. Start from `rebuild_plan/README.md`; the step files (`rebuild_plan/step-*.md`) hold the final plan.
-- **Progress record:** collect the step's deviations from the plan as you go. Write them, with the step's changes, into `progress.md`, `README.md` and `simulation/README.md` in one docs commit at the end of the step. Add the step's commands to the "Commands" section of `CLAUDE.md` in the same commit. Never record them in the planning repository.
+- **Progress record:** collect the step's deviations from the plan as you go. Write them, with the step's changes, into `docs/for_AI/progress.md`, `README.md` and `tests/README.md` in one docs commit at the end of the step. Add the step's commands to the "Commands" section of `CLAUDE.md` in the same commit. Never record them in the planning repository.
 
 <br>
 
@@ -41,7 +41,7 @@ No real GCP is used until step 9 (simulation only); CI never touches GCP. The sa
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
 | **Offline checks:** `terraform fmt`, `terraform init -backend=false`, `terraform validate`, `terraform test`, `tflint`, `pytest`, `ruff`, `shellcheck`, `pre-commit run` | No prompt; see "Who runs the checks"          |
 | **Read-only with credentials:** `terraform plan`, `terraform output`, `gcloud ... list` or `describe`, `bq show`, `bq query`                                             | Only when the maintainer asks                 |
-| **Changes the cloud:** `terraform apply` or `destroy`, `helpers/bootstrap.sh`, `helpers/upload_data.sh`, `bq load`, any `gcloud` create, update or delete                | Never run; give the command to the maintainer |
+| **Changes the cloud:** `terraform apply` or `destroy`, `scripts/bootstrap.sh`, `scripts/upload_data.sh`, `bq load`, any `gcloud` create, update or delete                | Never run; give the command to the maintainer |
 
 - **Never commit:** `terraform.tfvars`, `backend.hcl`, `*.tfstate*`, `.build/`, or any file from `data/raw/`.
 - **Never copy** the full dataset's contents into code, tests or docs. Only analysis view results may be published: labelled as simulated, with author names replaced ("Author 1") (step 8).
@@ -89,7 +89,7 @@ Follow the official Terraform and GCP documentation for syntax, arguments, and b
 
 ## Problem-solving workflow
 
-1. **Discovery:** read `progress.md` for the current state, then the step file in `rebuild_plan/` and the existing code.
+1. **Discovery:** read `docs/for_AI/progress.md` for the current state, then the step file in `rebuild_plan/` and the existing code.
 2. **Strategy:** propose the change for the current step, citing the step file and section. Flag any conflict with the plan.
 3. **Action:** apply surgical updates; explain each new resource or argument in the reply (see `maintainer.md`).
 4. **Verification:** run the quick checks on the changed files; confirm names and paths against the plan; give the maintainer the full-suite commands.

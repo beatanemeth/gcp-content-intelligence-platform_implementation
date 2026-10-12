@@ -56,10 +56,10 @@ Optional. Use one of these, matching the top-level concern of the change:
 | Scope       | Covers                                                         |
 | ----------- | -------------------------------------------------------------- |
 | `terraform` | `terraform/` (module and deployment)                           |
-| `function`  | Function code in the module                                    |
-| `sql`       | View SQL templates and `helpers/data_checks.sql`               |
+| `function`  | `function/`                                                    |
+| `sql`       | View SQL templates and `scripts/data_checks.sql`               |
 | `ci`        | `.github/workflows/`, `.pre-commit-config.yaml`, `.tflint.hcl` |
-| `scripts`   | `helpers/upload_data.sh`, `helpers/bootstrap.sh`               |
+| `scripts`   | `scripts/upload_data.sh`, `scripts/bootstrap.sh`               |
 | `data`      | `data/dummy/`                                                  |
 | `claude`    | `CLAUDE.md`, `.claude/`                                        |
 
