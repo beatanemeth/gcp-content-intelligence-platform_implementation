@@ -24,7 +24,6 @@ Part B of the story: the content pipeline as a standalone Terraform module. It c
 | `project_id`       | Input  | ID of the GCP project that Part A provides                 |
 | `region`           | Input  | Region for every regional resource, such as `europe-west1` |
 | `data_bucket_name` | Output | Name of the data bucket; the upload script reads it        |
-| `dataset_ids`      | Output | Dataset ID per layer: `staging`, `cleaned`, `analysis`     |
 | `function_name`    | Output | Name of the function; filters its logs after an upload     |
 
 No defaults: a missing input stops `plan` at once. No provider block: the caller configures `google`.

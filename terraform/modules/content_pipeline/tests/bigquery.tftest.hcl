@@ -24,16 +24,6 @@ run "datasets_and_staging_tables" {
     ])
     error_message = "Every staging table must use its own schema file."
   }
-
-  assert {
-    # tomap: a { for ... } expression is an object, and an object never equals a map.
-    condition = tomap(output.dataset_ids) == tomap({
-      staging  = "content_staging"
-      cleaned  = "content_cleaned"
-      analysis = "content_analysis"
-    })
-    error_message = "The dataset_ids output must map each layer to its dataset."
-  }
 }
 
 run "cleaned_views" {
