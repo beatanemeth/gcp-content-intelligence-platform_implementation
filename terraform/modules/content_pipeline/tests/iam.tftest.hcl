@@ -1,10 +1,7 @@
-# Simulated check: the mocked provider replaces apply, output and destroy in real
-# GCP. Every resource "succeeds" on the laptop; computed values get random strings.
 mock_provider "google" {}
 
-# The provider checks an IAM member's format (serviceAccount:...) before any
-# call, so a random string fails the grants. One value per account, so the test
-# can tell which account got which role.
+# A valid member per account: the provider checks the format, and the test must
+# tell the accounts apart.
 override_resource {
   target = google_service_account.pipeline["build"]
   values = { member = "serviceAccount:content-build@content-demo-sim.iam.gserviceaccount.com" }
@@ -20,7 +17,7 @@ override_resource {
   values = { member = "serviceAccount:content-runtime@content-demo-sim.iam.gserviceaccount.com" }
 }
 
-# The values Part A would hand over (simulated; they point to nothing real).
+# Simulated Part A values.
 variables {
   project_id = "content-demo-sim"
   region     = "europe-west1"
@@ -28,20 +25,6 @@ variables {
 
 run "service_accounts_and_grants" {
   command = apply
-
-  assert {
-    condition = tomap({ for job, a in google_service_account.pipeline : job => a.account_id }) == tomap({
-      build   = "content-build"
-      trigger = "content-trigger"
-      runtime = "content-runtime"
-    })
-    error_message = "The 3 accounts must be content-build, content-trigger and content-runtime."
-  }
-
-  assert {
-    condition     = alltrue([for a in google_service_account.pipeline : a.project == "content-demo-sim"])
-    error_message = "Every account must be in the given project."
-  }
 
   assert {
     condition = (

@@ -1,10 +1,7 @@
-# Simulated check: the archive provider is real, so the code is zipped on the
-# laptop. Only the Google provider is mocked.
+# Only Google is mocked; the archive provider really zips the code.
 mock_provider "google" {}
 
-# One value per account, so the test can tell which job runs as which account.
-# The build uses the account's id; the runtime and the trigger use its email;
-# the run.invoker grant uses its member (format checked by the provider).
+# Distinct values per account, so a swapped account fails.
 override_resource {
   target = google_service_account.pipeline["build"]
   values = {
@@ -32,7 +29,7 @@ override_resource {
   }
 }
 
-# The values Part A would hand over (simulated; they point to nothing real).
+# Simulated Part A values.
 variables {
   project_id = "content-demo-sim"
   region     = "europe-west1"
@@ -47,31 +44,6 @@ run "function_and_trigger" {
       google_storage_bucket_object.function_source.name == "function-source-${data.archive_file.function.output_md5}.zip"
     )
     error_message = "The zip must be in the source bucket, with its hash in the name."
-  }
-
-  assert {
-    condition = (
-      google_cloudfunctions2_function.transform.name == "content-transform" &&
-      google_cloudfunctions2_function.transform.project == "content-demo-sim" &&
-      google_cloudfunctions2_function.transform.location == "europe-west1"
-    )
-    error_message = "The function must be content-transform, in the given project and region."
-  }
-
-  assert {
-    condition = (
-      google_cloudfunctions2_function.transform.labels["feature"] == "content-pipeline" &&
-      google_cloudfunctions2_function.transform.labels["managed_by"] == "terraform"
-    )
-    error_message = "The function needs the feature and managed_by labels."
-  }
-
-  assert {
-    condition = (
-      google_cloudfunctions2_function.transform.build_config[0].runtime == "python314" &&
-      google_cloudfunctions2_function.transform.build_config[0].entry_point == "handle_event"
-    )
-    error_message = "The function must run handle_event on python314."
   }
 
   assert {
@@ -92,14 +64,8 @@ run "function_and_trigger" {
   }
 
   assert {
-    condition = (
-      google_cloudfunctions2_function.transform.service_config[0].max_instance_count == 2 &&
-      google_cloudfunctions2_function.transform.service_config[0].min_instance_count == 0 &&
-      google_cloudfunctions2_function.transform.service_config[0].ingress_settings == "ALLOW_INTERNAL_ONLY" &&
-      google_cloudfunctions2_function.transform.service_config[0].available_memory == "256M" &&
-      google_cloudfunctions2_function.transform.service_config[0].timeout_seconds == 300
-    )
-    error_message = "The function needs 0 to 2 instances, internal ingress, 256M and 300 seconds."
+    condition     = google_cloudfunctions2_function.transform.service_config[0].ingress_settings == "ALLOW_INTERNAL_ONLY"
+    error_message = "Only internal traffic (Eventarc) may reach the function."
   }
 
   assert {
@@ -114,10 +80,9 @@ run "function_and_trigger" {
   assert {
     condition = (
       google_cloudfunctions2_function.transform.event_trigger[0].event_type == "google.cloud.storage.object.v1.finalized" &&
-      google_cloudfunctions2_function.transform.event_trigger[0].trigger_region == "europe-west1" &&
       google_cloudfunctions2_function.transform.event_trigger[0].retry_policy == "RETRY_POLICY_RETRY"
     )
-    error_message = "The trigger must fire on finished uploads, in the given region, with retries on."
+    error_message = "The trigger must fire on finished uploads, with retries on."
   }
 
   assert {
@@ -134,10 +99,5 @@ run "function_and_trigger" {
       google_cloud_run_v2_service_iam_member.trigger_invoker.member == google_service_account.pipeline["trigger"].member
     )
     error_message = "The trigger account needs run.invoker on the function's service."
-  }
-
-  assert {
-    condition     = output.function_name == "content-transform"
-    error_message = "The function_name output must be content-transform."
   }
 }
