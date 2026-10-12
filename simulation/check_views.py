@@ -2,8 +2,8 @@
 emulator.
 
 Simulated, not real GCP: goccy/bigquery-emulator speaks the BigQuery API on the
-laptop. The script creates the 3 cleaned views and the 4 analysis views from the
-same SQL templates Terraform uses. It checks the cleaned views' rows against the
+laptop. The script creates the cleaned and analysis views from the same SQL
+templates Terraform uses. It checks the cleaned views' rows against the
 staging tables, and that every analysis view returns rows. Exits with 1 on any
 failed check.
 
@@ -47,20 +47,20 @@ PLACEHOLDERS = {
     "cleaned_dataset": CLEANED,
 }
 
-# Per layer: its dataset and its views, in Terraform's order. content reads the
-# other 2 cleaned views; the analysis views read the cleaned views.
-LAYERS = {
-    "cleaned": (CLEANED, ["blog_posts", "articles", "content"]),
-    "analysis": (
-        ANALYSIS,
-        [
-            "content_per_month",
-            "tag_frequency",
-            "top_posts_per_category",
-            "article_text_stats",
-        ],
-    ),
-}
+# Layer and dataset; cleaned first, because the analysis views read it.
+LAYERS = {"cleaned": CLEANED, "analysis": ANALYSIS}
+
+
+def view_names(layer: str) -> list[str]:
+    """One view per template file, so a new template cannot be skipped.
+
+    content goes last: it reads the other cleaned views.
+    """
+    names = sorted(
+        path.name.removesuffix(".sql.tftpl")
+        for path in (TEMPLATES / layer).glob("*.sql.tftpl")
+    )
+    return sorted(names, key=lambda name: name == "content")
 
 
 def ensure_dataset(client: bigquery.Client, dataset: str) -> None:
@@ -77,7 +77,7 @@ def ensure_dataset(client: bigquery.Client, dataset: str) -> None:
 
 def create_view(client: bigquery.Client, layer: str, name: str) -> None:
     """Create one view from its template, replacing any older version."""
-    dataset = LAYERS[layer][0]
+    dataset = LAYERS[layer]
     template = (TEMPLATES / layer / f"{name}.sql.tftpl").read_text(encoding="utf-8")
     # substitute, not safe_substitute: a missing placeholder fails, as in
     # Terraform's templatefile().
@@ -104,7 +104,7 @@ def report(check: str, view: str, result: int, passed: bool, expected: str) -> b
 def save_results(client: bigquery.Client, folder: Path) -> None:
     """Write each analysis view to <folder>/<view>.csv, with a header row."""
     folder.mkdir(parents=True, exist_ok=True)
-    for view in LAYERS["analysis"][1]:
+    for view in view_names("analysis"):
         # ORDER BY 1, 2: the first 2 columns are each view's key, so the file
         # is the same on every run. A view itself keeps no row order.
         result = client.query(
@@ -128,9 +128,9 @@ def main() -> int:
         credentials=AnonymousCredentials(),
         client_options=ClientOptions(api_endpoint=EMULATOR),
     )
-    for layer, (dataset, views) in LAYERS.items():
+    for layer, dataset in LAYERS.items():
         ensure_dataset(client, dataset)
-        for name in views:
+        for name in view_names(layer):
             create_view(client, layer, name)
 
     staging = f"{PROJECT}.{STAGING}"
@@ -195,7 +195,7 @@ def main() -> int:
     # has_rows: the analysis views have no staging number to match. An empty
     # answer means a broken join or filter. Runs even after a failed cleaned
     # check, so one report shows every failure.
-    for view in LAYERS["analysis"][1]:
+    for view in view_names("analysis"):
         rows = count(client, f"SELECT COUNT(*) FROM `{PROJECT}.{ANALYSIS}.{view}`")
         failed |= report("has_rows", view, rows, rows >= 1, ">= 1")
 
