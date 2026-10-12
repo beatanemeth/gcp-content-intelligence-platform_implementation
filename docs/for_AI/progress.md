@@ -2,11 +2,13 @@
 
 The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligence-platform_planning/tree/main/rebuild_plan) says what should happen; this file says what did. Deviations from the plan are recorded here, not in the plan.
 
+> Authorship note: written by Claude Code from the build steps.
+
 <br>
 
 ## Status
 
-**2026-10-12:** the simulated build is complete (steps 1 to 8, step 9 part 1). Branch `refactor/docs-and-folders` cuts the docs and moves the folders. Next: step 9, part 2 (`docs/real-deployment`): the real run, once a real GCP project exists.
+**2026-10-12:** the simulated build is complete.
 
 <br>
 
@@ -29,7 +31,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 ## Deviations by step
 
-All checks are simulated; the numbers (tests, rows) are in `simulation/README.md`.
+All checks are simulated; the checks and their limits are in `tests/README.md`.
 
 ### Step 1: repository, dummy data, pre-commit
 

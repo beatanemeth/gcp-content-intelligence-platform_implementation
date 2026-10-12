@@ -1,6 +1,6 @@
 # Module: content_pipeline
 
-Authorship note: see the root README.
+> Authorship note: see the root README.
 
 Part B of the story: the content pipeline as a standalone Terraform module. It creates only what the pipeline uses and changes nothing in Part A.
 
@@ -41,6 +41,19 @@ No defaults: a missing input stops `plan` at once. No provider block: the caller
 
 - **Fixed names:** `<project_id>-content-...` or `content...`. A second copy in the same project would fail.
 - **`destroy` removes everything,** data included.
+
+---
+
+### Analysis views: the 4 questions
+
+One view in `content_analysis` per question. Each SQL file opens with its question and the exact definition of its metric.
+
+| View                     | Question                                                                                                | SQL technique       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------- |
+| `content_per_month`      | How much content was published in each calendar month, per content type, and what is the running total? | Running total       |
+| `tag_frequency`          | Which tags and keywords are used most, per content type?                                                | `CROSS JOIN UNNEST` |
+| `top_posts_per_category` | Which 3 posts have the most views in each category, and who wrote them?                                 | Ranking             |
+| `article_text_stats`     | How long are the articles on average, per category?                                                     | Text measure        |
 
 ---
 

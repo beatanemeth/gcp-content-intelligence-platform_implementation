@@ -46,7 +46,7 @@ A real deployment comes later (step 9) and needs no code change.
 
 ## Where to find the plan
 
-Paths are relative to the planning repository. `rebuild_plan/` holds the reviewed, final plan; `review_plan/` and `architecture/` are earlier drafts and do not decide anything.
+Paths are relative to the planning repository. `rebuild_plan/` holds the reviewed, final plan; `history/` (`v1_brainstorming/`, `v2_architecture/`, `v3_review_plan/`) holds earlier drafts and does not decide anything.
 
 | File                               | Holds                                                    |
 | ---------------------------------- | -------------------------------------------------------- |

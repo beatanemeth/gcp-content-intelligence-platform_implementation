@@ -4,9 +4,13 @@ This repository rebuilds a local Docker and Jupyter project, the [Wix Content In
 
 Every design decision lives in the [planning repository](https://github.com/beatanemeth/gcp-content-intelligence-platform_planning); this repository implements it.
 
-> **Simulation only:** no real GCP is used. Every check runs on the laptop, and every simulated result is labelled as simulated. See [simulation/README.md](simulation/README.md). The steps for a real deployment, not run yet, are in [docs/runbook.md](docs/runbook.md).
+> **Authorship note:** Planned by me, implemented with Claude Code. Content by me, wording by Claude.
 
-### The story
+> **Simulation only:** no real GCP is used. Every check runs on the laptop, and every simulated result is labelled as simulated. See [tests/README.md](tests/README.md). The steps for a real deployment, not run yet, are in [docs/runbook.md](docs/runbook.md).
+
+<br>
+
+## The story
 
 - **Part A (the platform):** a company already runs a shared GCP platform with the project, billing, the enabled APIs and the Terraform state bucket.
 - **Part B (the feature):** the content pipeline is a new feature on that platform, delivered as a standalone Terraform module.
@@ -14,7 +18,9 @@ Every design decision lives in the [planning repository](https://github.com/beat
 
 The main decisions, with their reasons and costs, are in [docs/decisions.md](docs/decisions.md).
 
-### How it works
+<br>
+
+## How it works
 
 ![Content pipeline overview](assets/content_pipeline_overview.png)
 
@@ -26,32 +32,73 @@ The main decisions, with their reasons and costs, are in [docs/decisions.md](doc
 | **Cleaning**   | BigQuery `content_cleaned`  | 3 views: names joined in, one row per post or article                                      |
 | **Analysis**   | BigQuery `content_analysis` | 4 views: one answer per content question                                                   |
 
-- **The upload script:** `helpers/upload_data.sh` uploads each group's files, then its marker. It changes the cloud, so it never runs here.
+---
+
+<br>
+
+- **The upload script:** `scripts/upload_data.sh` uploads each group's files, then its marker. It changes the cloud, so it never runs here.
 - **2 meanings of "raw":** on the laptop, `data/dummy/` (made-up, committed) and `data/raw/` (the real exports, git-ignored); in the data bucket, `raw/` (the uploads) and `processed/` (the function's NDJSON).
+- **The 4 questions:** one analysis view each; the list is in the [module README](terraform/modules/content_pipeline/README.md#analysis-views-the-4-questions).
 
-### The 4 questions
+<br>
 
-One view in `content_analysis` per question. Each SQL file opens with its question and the exact definition of its metric.
+## Repository layout
 
-| View                     | Question                                                                                                | SQL technique       |
-| ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------- |
-| `content_per_month`      | How much content was published in each calendar month, per content type, and what is the running total? | Running total       |
-| `tag_frequency`          | Which tags and keywords are used most, per content type?                                                | `CROSS JOIN UNNEST` |
-| `top_posts_per_category` | Which 3 posts have the most views in each category, and who wrote them?                                 | Ranking             |
-| `article_text_stats`     | How long are the articles on average, per category?                                                     | Text measure        |
+In production this would be four repositories; here they are folders of one:
 
-### Results (simulated)
+| Repository in production | Folder here                           | Holds                                                       |
+| ------------------------ | ------------------------------------- | ----------------------------------------------------------- |
+| **Python code**          | `function/`, `tests/function/`        | The function that unwraps and cleans the exports; its tests |
+| **Terraform module**     | `terraform/modules/content_pipeline/` | Part B: buckets, BigQuery, service accounts, the function   |
+| **Terraform caller**     | `terraform/environments/dev/`         | One environment: provider, state backend, the module call   |
+| **Docs**                 | `docs/`                               | Decisions, the real-GCP runbook, the build log              |
 
-The full dataset (113 blog posts, 18 articles) on the local BigQuery emulator, 2026-10-11. Author names replaced.
+---
 
-| View                     | Main answer                                                                            |
-| ------------------------ | -------------------------------------------------------------------------------------- |
-| `content_per_month`      | Posts from 2019 to 2026, most in 2020 (33); articles since 2021                        |
-| `tag_frequency`          | Top blog tag: "Inspiring" (83 of 113 posts); top article keyword: "community" (5 of 18) |
-| `top_posts_per_category` | Most viewed: "The 8 Secrets of the 8-Step Espresso Routine" (4193 views); every top post by Author 1 |
-| `article_text_stats`     | 434 to 521 words on average per category: about 3 minutes' reading                     |
+<br>
 
-### Main technologies used
+The other folders support all four:
+
+- `scripts/` (upload, data checks, Part A stand-in),
+- `tests/simulation/` (BigQuery emulator checks),
+- `data/dummy/`, `assets/` and
+- `.github/workflows/`.
+
+<br>
+
+```text
+.
+├── .claude/                        # Claude Code rules, skills and settings
+├── .github/workflows/              # offline CI: Terraform, Python, shell
+├── assets/                         # the pipeline diagram
+├── data/dummy/                     # made-up exports; the real ones stay off the repository
+├── docs/
+│   ├── decisions.md                # design decisions, their reasons and costs
+│   ├── runbook.md                  # real GCP deployment, not run yet
+│   └── for_AI/progress.md          # build log and deviations from the plan
+├── function/                       # Python code: main.py, requirements.txt
+├── scripts/                        # bootstrap.sh (Part A stand-in), upload_data.sh, data_checks.sql
+├── terraform/
+│   ├── environments/dev/           # Terraform caller: provider, backend, module block
+│   └── modules/content_pipeline/   # Terraform module (Part B)
+│       ├── *.tf, README.md         # main, storage, bigquery, iam, function; inputs and outputs
+│       ├── schemas/                # one JSON schema per staging table
+│       ├── templates/              # cleaned/ and analysis/ view SQL
+│       └── tests/                  # *.tftest.hcl, mocked Google provider
+├── tests/
+│   ├── README.md                   # what the simulation proves and where it stops
+│   ├── function/                   # pytest with fake cloud clients
+│   └── simulation/                 # BigQuery emulator checks
+├── CLAUDE.md                       # project guide for Claude Code
+├── pyproject.toml                  # pytest and Ruff settings
+├── requirements-dev.txt            # local and CI tools
+├── .pre-commit-config.yaml, .tflint.hcl, .gitignore
+└── README.md
+```
+
+<br>
+
+## Main technologies used
 
 - **Infrastructure as code:** Terraform with the Google provider
 - **Cloud services (simulated):** Cloud Storage, Cloud Run functions, BigQuery, IAM
@@ -62,7 +109,9 @@ The full dataset (113 blog posts, 18 articles) on the local BigQuery emulator, 2
 
 <br>
 
-## Technical details
+## Run it yourself
+
+All commands run on the laptop and need no GCP credentials. Run them from the repository root unless noted.
 
 ### Prerequisites
 
@@ -75,12 +124,6 @@ The full dataset (113 blog posts, 18 articles) on the local BigQuery emulator, 2
 ### Operating system used
 
 - Linux Mint 21.2
-
-<br>
-
-## Run it yourself
-
-All commands run on the laptop and need no GCP credentials. Run them from the repository root unless noted.
 
 ### Set-up
 
@@ -121,7 +164,7 @@ ruff check            # lint
 ruff format --check   # format
 
 # The cleaning on the laptop: writes 6 NDJSON files to the git-ignored .build/
-python terraform/modules/content_pipeline/files/function/main.py data/dummy .build/ndjson
+python function/main.py data/dummy .build/ndjson
 wc -l .build/ndjson/*/*.ndjson
 ```
 
@@ -138,40 +181,15 @@ docker run --rm -p 9050:9050 ghcr.io/goccy/bigquery-emulator:0.8.1 \
     --project=content-demo-sim --dataset=content_staging
 
 # Terminal 2
-python simulation/check_staging.py
+python tests/simulation/check_staging.py
 ```
-
-- **The load:** each file goes into its staging table with the table's strict schema, as a real load would.
-- **The checks:** [helpers/data_checks.sql](helpers/data_checks.sql), one row per check and table. Expected: every row `ok`, exit code 0.
-- **A hanging script:** a stopped emulator looks like a slow query. Check `docker ps` first.
-- **`--counts full`:** expects the full dataset's counts (113, 9, 17, 8, 18 and 8). The real exports sit in the git-ignored `data/raw/` and are not in this repository; run `main.py data/raw .build/ndjson` first, on a fresh emulator.
-
-| Check               | Question                                                                            | Expected                                  |
-| ------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
-| `row_count`         | Did every record arrive?                                                            | The record counts: 75, 6, 11, 5, 12 and 5 |
-| `duplicate_keys`    | Does any `_id` appear twice?                                                        | 0                                         |
-| `orphan_references` | Does every category, tag, author and article category ID exist in its lookup table? | 0                                         |
-| `missing_titles`    | Does every post and article have a title? An empty title counts as missing          | 0                                         |
 
 ### View checks (simulated)
 
-Creates the 3 cleaned views and the 4 analysis views in the same emulator. Checks the cleaned views' rows against the staging tables, and that every analysis view returns rows. Run it after `check_staging.py`, with the emulator still running: it keeps the loaded tables in memory only.
-
 ```bash
 # Terminal 2, after check_staging.py
-python simulation/check_views.py
-python simulation/check_views.py --results .build/results-simulated   # also writes each analysis view as CSV
+python tests/simulation/check_views.py
+python tests/simulation/check_views.py --results .build/results-simulated   # also writes each analysis view as CSV
 ```
 
-- **The same SQL as Terraform:** the script fills in the templates in `terraform/modules/content_pipeline/templates/` with the same values as `bigquery.tf`. It creates `blog_posts`, `articles` and `content`, then the 4 analysis views: Terraform's order.
-- **`--results <folder>`:** after the checks, writes `<folder>/<view>.csv` for each analysis view, with a header row. Simulated results; `.build/` is git-ignored.
-- **Expected values from staging,** not fixed numbers. Expected: every row `ok`, exit code 0.
-
-| Check                  | View                     | Expected                                   |
-| ---------------------- | ------------------------ | ------------------------------------------ |
-| `row_count`            | `blog_posts`, `articles` | The staging table's row count (75, 12)     |
-| `distinct_ids`         | `blog_posts`, `articles` | The staging table's row count: no ID twice |
-| `missing_article_text` | `articles`               | 0                                          |
-| `row_count`            | `content`                | Posts + articles (87)                      |
-| `empty_names`          | `content`                | 0 empty category or tag names              |
-| `has_rows`             | Each analysis view       | At least 1 row                             |
+The checks and their expected values: [tests/README.md](tests/README.md).
