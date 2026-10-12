@@ -9,5 +9,5 @@ module "content_pipeline" {
   project_id = var.project_id
   region     = var.region
 
-  function_source_dir = "${path.root}/../../modules/content_pipeline/files/function"
+  function_source_dir = "${path.root}/../../../function"
 }

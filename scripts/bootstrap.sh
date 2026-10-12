@@ -6,7 +6,7 @@
 # It changes the cloud, so it never runs in the simulation or in CI.
 #
 # Usage, from any folder:
-#   PROJECT_ID=<project-id> BILLING_ACCOUNT=<billing-account-id> helpers/bootstrap.sh
+#   PROJECT_ID=<project-id> BILLING_ACCOUNT=<billing-account-id> scripts/bootstrap.sh
 #
 # Safe to run again: each step checks whether its result exists, or is a no-op
 # when it does (enabling an API, granting a role).

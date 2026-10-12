@@ -23,7 +23,7 @@ variables {
   region     = "europe-west1"
 
   # Relative to the module folder, where terraform test runs.
-  function_source_dir = "files/function"
+  function_source_dir = "../../../function"
 }
 
 run "service_accounts_and_grants" {

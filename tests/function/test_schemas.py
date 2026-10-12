@@ -14,7 +14,7 @@ from main import GROUPS, transform
 
 ROOT = Path(__file__).parents[2]
 DUMMY = ROOT / "data" / "dummy"
-SCHEMAS = ROOT / "terraform" / "modules" / "content_pipeline" / "files" / "schemas"
+SCHEMAS = ROOT / "terraform" / "modules" / "content_pipeline" / "schemas"
 
 TABLES = [(group, name) for group, names in GROUPS.items() for name in names]
 

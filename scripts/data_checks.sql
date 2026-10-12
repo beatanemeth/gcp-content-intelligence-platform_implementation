@@ -7,8 +7,8 @@
 --   orphan_references  0
 --   missing_titles     0
 --
--- Real GCP (step 9): bq query --use_legacy_sql=false < helpers/data_checks.sql
--- Simulated: simulation/check_staging.py runs it on the BigQuery emulator.
+-- Real GCP (step 9): bq query --use_legacy_sql=false < scripts/data_checks.sql
+-- Simulated: tests/simulation/check_staging.py runs it on the BigQuery emulator.
 --
 -- Orphans use LEFT JOIN ... WHERE <lookup>._id IS NULL, not NOT IN: the intent
 -- stays clear, and NOT IN returns no row at all once the list holds a NULL, so a

@@ -10,8 +10,8 @@ failed check.
 Run after check_staging.py, with the emulator still running: the emulator keeps
 the loaded staging tables in memory only.
 
-    python simulation/check_views.py
-    python simulation/check_views.py --results .build/results-simulated
+    python tests/simulation/check_views.py
+    python tests/simulation/check_views.py --results .build/results-simulated
 
 --results also writes each analysis view to <folder>/<view>.csv, after the
 checks. The numbers come from the emulator: simulated results (step 8).
@@ -31,7 +31,7 @@ from google.api_core.exceptions import NotFound
 from google.auth.credentials import AnonymousCredentials
 from google.cloud import bigquery
 
-ROOT = Path(__file__).parents[1]
+ROOT = Path(__file__).parents[2]
 TEMPLATES = ROOT / "terraform" / "modules" / "content_pipeline" / "templates"
 
 EMULATOR = "http://localhost:9050"

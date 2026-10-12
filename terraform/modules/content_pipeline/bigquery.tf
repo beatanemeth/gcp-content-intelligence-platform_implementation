@@ -19,7 +19,7 @@ resource "google_bigquery_table" "staging" {
   project    = var.project_id
   table_id   = each.key
 
-  schema = file("${path.module}/files/schemas/${each.key}.json")
+  schema = file("${path.module}/schemas/${each.key}.json")
 
   deletion_protection = false
 

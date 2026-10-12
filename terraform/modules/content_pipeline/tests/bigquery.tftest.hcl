@@ -13,7 +13,7 @@ variables {
   region     = "europe-west1"
 
   # Relative to the module folder, where terraform test runs.
-  function_source_dir = "files/function"
+  function_source_dir = "../../../function"
 }
 
 run "datasets_and_staging_tables" {
@@ -23,7 +23,7 @@ run "datasets_and_staging_tables" {
     # jsondecode on both sides: compares the columns, not the file's spacing.
     condition = alltrue([
       for name, t in google_bigquery_table.staging :
-      jsondecode(t.schema) == jsondecode(file("files/schemas/${name}.json"))
+      jsondecode(t.schema) == jsondecode(file("schemas/${name}.json"))
     ])
     error_message = "Every staging table must use its own schema file."
   }

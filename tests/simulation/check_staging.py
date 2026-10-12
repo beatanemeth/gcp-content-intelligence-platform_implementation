@@ -2,7 +2,7 @@
 
 Simulated, not real GCP: goccy/bigquery-emulator speaks the BigQuery API on the
 laptop. The script loads the 6 NDJSON files from .build/ndjson/ as a real load
-would, runs helpers/data_checks.sql and compares each result with its expected
+would, runs scripts/data_checks.sql and compares each result with its expected
 value. Exits with 1 on any mismatch.
 
 Start the emulator first (it creates content_staging; the script never does):
@@ -12,8 +12,8 @@ Start the emulator first (it creates content_staging; the script never does):
 
 Then, in a second terminal:
 
-    python simulation/check_staging.py                 # dummy data
-    python simulation/check_staging.py --counts full   # full dataset (step 8)
+    python tests/simulation/check_staging.py                 # dummy data
+    python tests/simulation/check_staging.py --counts full   # full dataset (step 8)
 
 A stopped emulator looks like a slow query, not an error: if the script hangs,
 check `docker ps` first.
@@ -31,10 +31,10 @@ from google.api_core.client_options import ClientOptions
 from google.auth.credentials import AnonymousCredentials
 from google.cloud import bigquery
 
-ROOT = Path(__file__).parents[1]
+ROOT = Path(__file__).parents[2]
 NDJSON = ROOT / ".build" / "ndjson"
-SCHEMAS = ROOT / "terraform" / "modules" / "content_pipeline" / "files" / "schemas"
-CHECKS = ROOT / "helpers" / "data_checks.sql"
+SCHEMAS = ROOT / "terraform" / "modules" / "content_pipeline" / "schemas"
+CHECKS = ROOT / "scripts" / "data_checks.sql"
 
 EMULATOR = "http://localhost:9050"
 PROJECT = "content-demo-sim"

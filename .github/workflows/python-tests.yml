@@ -1,5 +1,5 @@
 # Offline checks only: pure functions on the dummy data; no GCP credentials.
-# simulation/ is linted, not tested: its scripts need the BigQuery emulator.
+# tests/simulation/ is linted, not tested: its scripts need the BigQuery emulator.
 name: Python tests
 
 on:

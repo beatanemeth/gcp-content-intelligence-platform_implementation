@@ -3,13 +3,13 @@
 [tool.pytest]
 testpaths = ["tests"]
 # Tests import main from its own folder, as the function's runtime does.
-pythonpath = ["terraform/modules/content_pipeline/files/function"]
+pythonpath = ["function"]
 
 [tool.ruff]
 # The function's runtime version.
 target-version = "py314"
 # Import sorting treats main as own code, not as a third-party library.
-src = [".", "terraform/modules/content_pipeline/files/function"]
+src = [".", "function"]
 # Docs hold no Python code blocks, and CI skips docs-only changes.
 extend-exclude = ["*.md"]
 
