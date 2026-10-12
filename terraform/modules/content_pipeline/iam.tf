@@ -1,10 +1,3 @@
-# One account per job (build, trigger, runtime): a bug or a leak in one job opens
-# only that job's doors. The runtime account handles the data but cannot touch
-# the code; the build account reads the code but not the data.
-#
-# No google_service_account_key: Google issues a short-lived token on each run,
-# so no key file exists to leak or rotate.
-
 resource "google_service_account" "pipeline" {
   for_each = local.service_accounts
 
@@ -13,24 +6,16 @@ resource "google_service_account" "pipeline" {
   project      = var.project_id
 }
 
-# Every grant is *_iam_member: it adds one member to one role and leaves every
-# other member alone. A *_iam_binding or *_iam_policy would replace the members
-# that Team A or another feature has granted.
-#
-# run.invoker (trigger account) targets the function's service, so it lives in
-# function.tf (step 5b).
+# *_iam_member only: binding and policy resources would overwrite grants made
+# outside this module.
 
-# Runtime: read raw/ and overwrite processed/; the load job also reads
-# processed/ as this account. objectUser, not objectCreator: an overwrite needs
-# storage.objects.delete.
+# objectUser, not objectCreator: overwriting processed/ needs delete.
 resource "google_storage_bucket_iam_member" "runtime_data" {
   bucket = google_storage_bucket.data.name
   role   = "roles/storage.objectUser"
   member = google_service_account.pipeline["runtime"].member
 }
 
-# Runtime: replace the staging tables' rows. Only content_staging, so the
-# cleaned and analysis layers stay out of reach.
 resource "google_bigquery_dataset_iam_member" "runtime_staging" {
   project    = var.project_id
   dataset_id = google_bigquery_dataset.layer["staging"].dataset_id
@@ -38,8 +23,6 @@ resource "google_bigquery_dataset_iam_member" "runtime_staging" {
   member     = google_service_account.pipeline["runtime"].member
 }
 
-# Runtime: start load jobs. Trigger: receive events from Eventarc. Build: push
-# the built image and write the build logs.
 resource "google_project_iam_member" "pipeline" {
   for_each = local.project_roles
 
@@ -48,19 +31,14 @@ resource "google_project_iam_member" "pipeline" {
   member  = google_service_account.pipeline[each.value.account].member
 }
 
-# Build: read the function's source code. Google copies it into its own buckets
-# (gcf-v2-sources-..., gcf-v2-uploads-..., run-sources-...), which exist only
-# after the first deploy, so no bucket-level grant is possible. A plain
-# project-level objectViewer would also reach the data bucket and Team A's state
-# bucket; the condition limits it to the code buckets.
+# Google's code buckets appear only on first deploy, so grant on the project and
+# scope it with a condition.
 resource "google_project_iam_member" "build_code_reader" {
   project = var.project_id
   role    = "roles/storage.objectViewer"
   member  = google_service_account.pipeline["build"].member
 
-  # IAM checks the CEL expression on every request; an object's name has the
-  # form projects/_/buckets/<bucket>/objects/<object>. The trailing / after the
-  # source bucket matches that bucket only, not one whose name starts the same.
+  # Trailing / so a bucket with the same prefix does not match.
   condition {
     title       = "content-build-code-buckets-only"
     description = "Read objects in the function's code buckets only."

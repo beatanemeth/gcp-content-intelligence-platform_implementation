@@ -3,14 +3,10 @@ name: Shell checks
 
 on:
   pull_request:
-    paths:
-      - "helpers/*.sh"
-      - ".github/workflows/shell-checks.yml"
+    paths-ignore: ["**/*.md"]
   push:
     branches: [main]
-    paths:
-      - "helpers/*.sh"
-      - ".github/workflows/shell-checks.yml"
+    paths-ignore: ["**/*.md"]
 
 # The token can only read the repository.
 permissions:
@@ -24,4 +20,4 @@ jobs:
 
       # ShellCheck is preinstalled on the runner.
       - name: ShellCheck
-        run: shellcheck helpers/*.sh
+        run: shellcheck scripts/*.sh

@@ -3,11 +3,6 @@ output "data_bucket_name" {
   value       = module.content_pipeline.data_bucket_name
 }
 
-output "dataset_ids" {
-  description = "Dataset ID per layer (staging, cleaned, analysis)."
-  value       = module.content_pipeline.dataset_ids
-}
-
 output "function_name" {
   description = "Name of the function; filters its logs after an upload."
   value       = module.content_pipeline.function_name

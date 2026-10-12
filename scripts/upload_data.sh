@@ -7,7 +7,7 @@
 # in the simulation.
 #
 # Usage, from any folder (the data folder is relative to the repository root):
-#   helpers/upload_data.sh [data folder]    # default: data/dummy
+#   scripts/upload_data.sh [data folder]    # default: data/dummy
 #
 # Safe to run again: files and markers are overwritten; the loads replace the rows.
 

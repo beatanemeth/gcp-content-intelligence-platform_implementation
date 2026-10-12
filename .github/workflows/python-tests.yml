@@ -1,29 +1,13 @@
 # Offline checks only: pure functions on the dummy data; no GCP credentials.
-# simulation/ is linted, not tested: its scripts need the BigQuery emulator.
+# tests/simulation/ is linted, not tested: its scripts need the BigQuery emulator.
 name: Python tests
 
 on:
   pull_request:
-    paths:
-      - "terraform/modules/content_pipeline/files/function/**"
-      - "terraform/modules/content_pipeline/files/schemas/**"
-      - "simulation/**"
-      - "tests/**"
-      - "data/dummy/**"
-      - "pyproject.toml"
-      - "requirements-dev.txt"
-      - ".github/workflows/python-tests.yml"
+    paths-ignore: ["**/*.md"]
   push:
     branches: [main]
-    paths:
-      - "terraform/modules/content_pipeline/files/function/**"
-      - "terraform/modules/content_pipeline/files/schemas/**"
-      - "simulation/**"
-      - "tests/**"
-      - "data/dummy/**"
-      - "pyproject.toml"
-      - "requirements-dev.txt"
-      - ".github/workflows/python-tests.yml"
+    paths-ignore: ["**/*.md"]
 
 # The token can only read the repository.
 permissions:
