@@ -18,3 +18,6 @@ terraform/modules/content_pipeline/.terraform.lock.hcl
 __pycache__/
 .venv/
 .pytest_cache/
+
+# Private notes and drafts; never published
+notes/
