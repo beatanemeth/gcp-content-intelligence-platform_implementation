@@ -10,6 +10,10 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 **2026-10-12:** the simulated build is complete.
 
+**2026-10-20:** the real run on GCP is complete (step 9, part 2). Every check of the plan passed; 3 findings below. The project is kept for more runs and is deleted before the Free Trial ends (2027-01-19).
+
+**Next:** fix finding 1 in `scripts/bootstrap.sh` on its own branch.
+
 <br>
 
 ## Merged branches
@@ -92,3 +96,34 @@ All checks are simulated; the checks and their limits are in `tests/README.md`.
 - **`--billing-project` on the budget commands (needed):** the Billing Budget API is charged to a quota project.
 - **Versioning with `buckets update`, on every run (needed):** `buckets create` has no versioning flag.
 - **`--calendar-period=month` (explicit):** the reference states no default.
+
+### Step 9, part 2: the real run (2026-10-20)
+
+A personal GCP project on the Free Trial, billing account in USD. The dummy data first, then the full dataset.
+
+| Check in the plan                          | Result                                                                                         |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Google accepts every resource              | 31 resources, after one rerun of `apply` (finding 2)                                           |
+| No drift                                   | The second `plan`: "No changes"                                                                |
+| The build account reads its code           | The function deployed; status ready in the console                                             |
+| Eventarc delivers; only `_READY` does work | 6 log lines, records = rows; the first NDJSON file in the same second as the marker             |
+| The loads are strict and complete          | `data_checks.sql`: 75, 6, 11, 5, 12, 5; 0 everywhere else                                       |
+| The views work in real BigQuery            | Rows in all 4 analysis views                                                                   |
+| Full dataset                               | 113, 9, 17, 8, 18, 8 in the logs and the data checks; 0 everywhere else                        |
+| Simulation and reality agree               | All 4 analysis views the same as the step 8 CSV files, apart from 2 output formats (finding 3) |
+| `destroy` removes everything               | 31 destroyed; besides the state bucket, 2 objects Google created itself remain (below)         |
+
+**Findings:**
+
+- **Finding 1, a bug in `bootstrap.sh`:** `gcloud storage service-agent` prints the email with a line break and 2 spaces in front; `$( )` keeps them, so the `pubsub.publisher` grant fails with "does not exist". Granted by hand with `| tr -d '[:space:]'`. The fix is the next branch.
+- **Finding 2, a Google-side delay:** the first `apply` failed on the function: "Permission denied while using the Eventarc Service Agent". The same `apply` 5 minutes later created the remaining 2 resources. No code change.
+- **Finding 3, output formats only:** the simulation's CSV files end lines with `\r\n` (Python's `csv`), `bq` with `\n`; `bq --format=csv` prints timestamps without milliseconds. BigQuery stores them: 26 of 27 rows in `top_posts_per_category` have milliseconds, the 27th is exactly 0 ms in the export, in both.
+
+**Deviations from the plan and the runbook:**
+
+- **Log text:** the plan expects `File loaded`; the function logs `<group>/<file>: N records written, N rows loaded`.
+- **Left after `destroy`:** the bucket `gcf-v2-sources-<project-number>-<region>` and the Artifact Registry repository `gcf-artifacts` (the function's images). Cloud Run functions creates both, outside Terraform; deleting the project removes them.
+- **Default service accounts with Editor:** Google created the Compute Engine and App Engine default accounts, both with `roles/editor`. The pipeline does not use them; a company's organisation policy usually blocks these grants.
+- **`gcloud config set project` moved to step 2 of the runbook:** before the project exists, `gcloud` warns.
+- **Project kept:** step 11 (delete the project) waits for more runs; each run is steps 5 to 10.
+- **`BUDGET_AMOUNT` stays fixed at 10:** a Hungarian billing account is in USD; HUF is not a Cloud Billing currency.
