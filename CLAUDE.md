@@ -40,7 +40,7 @@ No real GCP is used. Every cloud check runs on the laptop, and every simulated r
 | BigQuery  | `goccy/bigquery-emulator` in Docker            |
 | Python    | pytest with fake cloud clients                 |
 
-A real deployment comes later (step 9) and needs no code change.
+One real deployment ran on 2026-10-20 (step 9, part 2) with no change to the module; the results and findings are in `docs/for_AI/progress.md`.
 
 <br>
 
@@ -82,7 +82,7 @@ As built; the planned layout is in `rebuild_plan/step-0_overview.md`.
 │   ├── function/                   # pytest for the function code
 │   └── simulation/                 # check_staging.py, check_views.py (BigQuery emulator)
 ├── data/                           # dummy/ committed; raw/ git-ignored
-├── docs/                           # decisions.md; runbook.md (real GCP, never run)
+├── docs/                           # decisions.md; runbook.md (real GCP, run on 2026-10-20)
 │   └── for_AI/progress.md          # build log and deviations
 ├── assets/                         # the pipeline diagram
 └── .github/workflows/              # 3 offline CI workflows
