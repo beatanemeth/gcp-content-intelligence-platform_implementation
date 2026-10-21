@@ -84,7 +84,7 @@ As built; the planned layout is in `rebuild_plan/step-0_overview.md`.
 ├── data/                           # dummy/ committed; raw/ git-ignored
 ├── docs/                           # decisions.md; runbook.md (real GCP, run on 2026-10-20)
 │   └── for_AI/progress.md          # build log and deviations
-├── assets/                         # the pipeline and deployment diagrams
+├── assets/                         # the pipeline and deployment diagrams; real-run/ (Console screenshots)
 └── .github/workflows/              # 3 offline CI workflows
 ```
 

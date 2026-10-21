@@ -8,7 +8,7 @@ Every design decision lives in the [planning repository](https://github.com/beat
 
 > **Simulated, then run once on real GCP:** every check runs on the laptop, and every simulated result is labelled as simulated ([tests/README.md](tests/README.md)).
 
-> **Real run:** the details in the [runbook](docs/runbook.md); the steps at a glance in the [diagram](assets/deployment_steps.png).
+> **Real run:** the details in the [runbook](docs/runbook.md); the steps at a glance in the [diagram](assets/deployment_steps.png); the Console in [screenshots](assets/real-run/).
 
 <br>
 
@@ -89,7 +89,7 @@ The other folders support all four:
 .
 ├── .claude/                        # Claude Code rules, skills and settings
 ├── .github/workflows/              # offline CI: Terraform, Python, shell
-├── assets/                         # the pipeline and deployment diagrams
+├── assets/                         # the pipeline and deployment diagrams; real-run/: Console screenshots
 ├── data/dummy/                     # made-up exports; the real ones stay off the repository
 ├── docs/
 │   ├── decisions.md                # design decisions, their reasons and costs
