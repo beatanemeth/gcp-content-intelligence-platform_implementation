@@ -1,0 +1,74 @@
+[Trimmed for the repository: resource attributes, refresh lines and progress timers removed; private values replaced with placeholders.]
+
+Terraform will perform the following actions:
+  # module.content_pipeline.google_bigquery_dataset.layer["analysis"] will be destroyed
+  # module.content_pipeline.google_bigquery_dataset.layer["cleaned"] will be destroyed
+  # module.content_pipeline.google_bigquery_dataset.layer["staging"] will be destroyed
+  # module.content_pipeline.google_bigquery_dataset_iam_member.runtime_staging will be destroyed
+  # module.content_pipeline.google_bigquery_table.analysis["article_text_stats"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.analysis["content_per_month"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.analysis["tag_frequency"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.analysis["top_posts_per_category"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.cleaned["articles"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.cleaned["blog_posts"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.content will be destroyed
+  # module.content_pipeline.google_bigquery_table.staging["article_categories"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.staging["articles"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.staging["blog_categories"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.staging["blog_posts"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.staging["blog_tags"] will be destroyed
+  # module.content_pipeline.google_bigquery_table.staging["members"] will be destroyed
+  # module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker will be destroyed
+  # module.content_pipeline.google_cloudfunctions2_function.transform will be destroyed
+  # module.content_pipeline.google_project_iam_member.build_code_reader will be destroyed
+  # module.content_pipeline.google_project_iam_member.pipeline["build_artifact_writer"] will be destroyed
+  # module.content_pipeline.google_project_iam_member.pipeline["build_log_writer"] will be destroyed
+  # module.content_pipeline.google_project_iam_member.pipeline["runtime_job_user"] will be destroyed
+  # module.content_pipeline.google_project_iam_member.pipeline["trigger_event_receiver"] will be destroyed
+  # module.content_pipeline.google_service_account.pipeline["build"] will be destroyed
+  # module.content_pipeline.google_service_account.pipeline["runtime"] will be destroyed
+  # module.content_pipeline.google_service_account.pipeline["trigger"] will be destroyed
+  # module.content_pipeline.google_storage_bucket.data will be destroyed
+  # module.content_pipeline.google_storage_bucket.source will be destroyed
+  # module.content_pipeline.google_storage_bucket_iam_member.runtime_data will be destroyed
+  # module.content_pipeline.google_storage_bucket_object.function_source will be destroyed
+
+Plan: 0 to add, 0 to change, 31 to destroy.
+
+Changes to Outputs:
+  - data_bucket_name = "<project-id>-content-data" -> null
+  - function_name    = "content-transform" -> null
+
+module.content_pipeline.google_bigquery_table.analysis["tag_frequency"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.analysis["article_text_stats"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.analysis["top_posts_per_category"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.analysis["content_per_month"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.content: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.cleaned["blog_posts"]: Destruction complete after 1s
+module.content_pipeline.google_bigquery_table.cleaned["articles"]: Destruction complete after 1s
+module.content_pipeline.google_bigquery_table.staging["article_categories"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.staging["blog_categories"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.staging["blog_tags"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.staging["blog_posts"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.staging["articles"]: Destruction complete after 0s
+module.content_pipeline.google_bigquery_table.staging["members"]: Destruction complete after 0s
+module.content_pipeline.google_storage_bucket_iam_member.runtime_data: Destruction complete after 5s
+module.content_pipeline.google_bigquery_dataset_iam_member.runtime_staging: Destruction complete after 5s
+module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker: Destruction complete after 6s
+module.content_pipeline.google_cloudfunctions2_function.transform: Destruction complete after 21s
+module.content_pipeline.google_storage_bucket_object.function_source: Destruction complete after 0s
+module.content_pipeline.google_bigquery_dataset.layer["analysis"]: Destruction complete after 1s
+module.content_pipeline.google_bigquery_dataset.layer["staging"]: Destruction complete after 1s
+module.content_pipeline.google_bigquery_dataset.layer["cleaned"]: Destruction complete after 1s
+module.content_pipeline.google_storage_bucket.data: Destruction complete after 3s
+module.content_pipeline.google_project_iam_member.pipeline["trigger_event_receiver"]: Destruction complete after 10s
+module.content_pipeline.google_project_iam_member.pipeline["build_log_writer"]: Destruction complete after 11s
+module.content_pipeline.google_project_iam_member.pipeline["build_artifact_writer"]: Destruction complete after 11s
+module.content_pipeline.google_project_iam_member.pipeline["runtime_job_user"]: Destruction complete after 12s
+module.content_pipeline.google_project_iam_member.build_code_reader: Destruction complete after 12s
+module.content_pipeline.google_service_account.pipeline["trigger"]: Destruction complete after 1s
+module.content_pipeline.google_service_account.pipeline["build"]: Destruction complete after 1s
+module.content_pipeline.google_service_account.pipeline["runtime"]: Destruction complete after 1s
+module.content_pipeline.google_storage_bucket.source: Destruction complete after 2s
+
+Destroy complete! Resources: 31 destroyed.

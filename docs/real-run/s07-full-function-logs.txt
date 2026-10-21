@@ -1,0 +1,51 @@
+LEVEL  NAME               EXECUTION_ID  TIME_UTC                 LOG
+I      content-transform  4JeGhwoeb5Xs  2026-10-20 20:23:52.918  blogs/members: 8 records written, 8 rows loaded
+I      content-transform  otnm1yVcIoe3  2026-10-20 20:23:50.831  articles/article_categories: 8 records written, 8 rows loaded
+I      content-transform                2026-10-20 20:23:50.745
+I      content-transform  4JeGhwoeb5Xs  2026-10-20 20:23:50.561  blogs/blog_tags: 17 records written, 17 rows loaded
+I      content-transform                2026-10-20 20:23:49.148
+I      content-transform  4JeGhwoeb5Xs  2026-10-20 20:23:48.433  blogs/blog_categories: 9 records written, 9 rows loaded
+I      content-transform                2026-10-20 20:23:47.715
+I      content-transform  otnm1yVcIoe3  2026-10-20 20:23:47.540  articles/articles: 18 records written, 18 rows loaded
+I      content-transform                2026-10-20 20:23:46.761
+I      content-transform  4JeGhwoeb5Xs  2026-10-20 20:23:46.536  blogs/blog_posts: 113 records written, 113 rows loaded
+I      content-transform                2026-10-20 20:23:45.853
+I      content-transform                2026-10-20 20:23:45.328
+I      content-transform                2026-10-20 20:23:44.225  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+I      content-transform                2026-10-20 20:23:43.994
+I      content-transform                2026-10-20 20:23:43.790
+I      content-transform                2026-10-20 20:23:43.655
+I      content-transform                2026-10-20 20:23:43.190  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+I      content-transform                2026-10-20 20:23:43.046
+I      content-transform                2026-10-20 20:23:41.753
+I      content-transform                2026-10-20 20:23:41.494  Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+I      content-transform                2026-10-20 20:23:41.475  Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+I      content-transform                2026-10-20 20:23:41.463
+I      content-transform                2026-10-20 20:23:41.454
+I      content-transform                2026-10-20 20:23:41.452
+I      content-transform                2026-10-20 19:47:54.232
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:42.227  blogs/members: 5 records written, 5 rows loaded
+I      content-transform  pWYRIIVysBdd  2026-10-20 19:47:42.180  articles/article_categories: 5 records written, 5 rows loaded
+I      content-transform                2026-10-20 19:47:40.652
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:40.469  blogs/blog_tags: 11 records written, 11 rows loaded
+I      content-transform                2026-10-20 19:47:39.703
+I      content-transform  pWYRIIVysBdd  2026-10-20 19:47:39.538  articles/articles: 12 records written, 12 rows loaded
+I      content-transform                2026-10-20 19:47:35.569
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:34.847  blogs/blog_categories: 6 records written, 6 rows loaded
+I      content-transform                2026-10-20 19:47:34.041
+I      content-transform                2026-10-20 19:47:33.582
+I      content-transform                2026-10-20 19:47:32.557
+I      content-transform                2026-10-20 19:47:31.959  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+I      content-transform                2026-10-20 19:47:31.912
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:31.807  blogs/blog_posts: 75 records written, 75 rows loaded
+I      content-transform                2026-10-20 19:47:31.600
+E      content-transform                2026-10-20 19:47:30.992  The request was aborted because there was no available instance. Additional troubleshooting documentation can be found at: https://cloud.google.com/run/docs/troubleshooting#abort-request
+I      content-transform                2026-10-20 19:47:29.683
+I      content-transform                2026-10-20 19:47:29.207  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+I      content-transform                2026-10-20 19:47:28.191
+I      content-transform                2026-10-20 19:47:28.107
+I      content-transform                2026-10-20 19:47:27.924  Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+I      content-transform                2026-10-20 19:47:27.890
+I      content-transform                2026-10-20 19:47:27.821  Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+I      content-transform                2026-10-20 19:47:27.788
+I      content-transform                2026-10-20 19:13:25.979  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.

@@ -1,0 +1,124 @@
+[Trimmed for the repository: resource attributes, refresh lines and progress timers removed; private values replaced with placeholders.]
+
+Terraform will perform the following actions:
+  # module.content_pipeline.google_bigquery_dataset.layer["analysis"] will be created
+  # module.content_pipeline.google_bigquery_dataset.layer["cleaned"] will be created
+  # module.content_pipeline.google_bigquery_dataset.layer["staging"] will be created
+  # module.content_pipeline.google_bigquery_dataset_iam_member.runtime_staging will be created
+  # module.content_pipeline.google_bigquery_table.analysis["article_text_stats"] will be created
+  # module.content_pipeline.google_bigquery_table.analysis["content_per_month"] will be created
+  # module.content_pipeline.google_bigquery_table.analysis["tag_frequency"] will be created
+  # module.content_pipeline.google_bigquery_table.analysis["top_posts_per_category"] will be created
+  # module.content_pipeline.google_bigquery_table.cleaned["articles"] will be created
+  # module.content_pipeline.google_bigquery_table.cleaned["blog_posts"] will be created
+  # module.content_pipeline.google_bigquery_table.content will be created
+  # module.content_pipeline.google_bigquery_table.staging["article_categories"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["articles"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["blog_categories"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["blog_posts"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["blog_tags"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["members"] will be created
+  # module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker will be created
+  # module.content_pipeline.google_cloudfunctions2_function.transform will be created
+  # module.content_pipeline.google_project_iam_member.build_code_reader will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["build_artifact_writer"] will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["build_log_writer"] will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["runtime_job_user"] will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["trigger_event_receiver"] will be created
+  # module.content_pipeline.google_service_account.pipeline["build"] will be created
+  # module.content_pipeline.google_service_account.pipeline["runtime"] will be created
+  # module.content_pipeline.google_service_account.pipeline["trigger"] will be created
+  # module.content_pipeline.google_storage_bucket.data will be created
+  # module.content_pipeline.google_storage_bucket.source will be created
+  # module.content_pipeline.google_storage_bucket_iam_member.runtime_data will be created
+  # module.content_pipeline.google_storage_bucket_object.function_source will be created
+
+Plan: 31 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + data_bucket_name = "<project-id>-content-data"
+  + function_name    = "content-transform"
+
+module.content_pipeline.google_service_account.pipeline["runtime"]: Creating...
+module.content_pipeline.google_service_account.pipeline["build"]: Creating...
+module.content_pipeline.google_service_account.pipeline["trigger"]: Creating...
+module.content_pipeline.google_bigquery_dataset.layer["staging"]: Creating...
+module.content_pipeline.google_bigquery_dataset.layer["cleaned"]: Creating...
+module.content_pipeline.google_storage_bucket.source: Creating...
+module.content_pipeline.google_bigquery_dataset.layer["analysis"]: Creating...
+module.content_pipeline.google_storage_bucket.data: Creating...
+module.content_pipeline.google_storage_bucket.source: Creation complete after 1s
+module.content_pipeline.google_storage_bucket_object.function_source: Creating...
+module.content_pipeline.google_storage_bucket_object.function_source: Creation complete after 0s
+module.content_pipeline.google_storage_bucket.data: Creation complete after 1s
+module.content_pipeline.google_bigquery_dataset.layer["cleaned"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_dataset.layer["staging"]: Creation complete after 2s
+module.content_pipeline.google_bigquery_dataset.layer["analysis"]: Creation complete after 2s
+module.content_pipeline.google_bigquery_table.staging["article_categories"]: Creating...
+module.content_pipeline.google_bigquery_table.staging["members"]: Creating...
+module.content_pipeline.google_bigquery_table.staging["blog_categories"]: Creating...
+module.content_pipeline.google_bigquery_table.staging["blog_posts"]: Creating...
+module.content_pipeline.google_bigquery_table.staging["blog_tags"]: Creating...
+module.content_pipeline.google_bigquery_table.staging["articles"]: Creating...
+module.content_pipeline.google_bigquery_table.staging["blog_categories"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.staging["article_categories"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.staging["blog_tags"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.staging["articles"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.staging["blog_posts"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.staging["members"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.cleaned["articles"]: Creating...
+module.content_pipeline.google_bigquery_table.cleaned["blog_posts"]: Creating...
+module.content_pipeline.google_bigquery_table.cleaned["articles"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.cleaned["blog_posts"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.content: Creating...
+module.content_pipeline.google_bigquery_table.content: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.analysis["tag_frequency"]: Creating...
+module.content_pipeline.google_bigquery_table.analysis["top_posts_per_category"]: Creating...
+module.content_pipeline.google_bigquery_table.analysis["content_per_month"]: Creating...
+module.content_pipeline.google_bigquery_table.analysis["article_text_stats"]: Creating...
+module.content_pipeline.google_bigquery_table.analysis["article_text_stats"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.analysis["top_posts_per_category"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.analysis["content_per_month"]: Creation complete after 1s
+module.content_pipeline.google_bigquery_table.analysis["tag_frequency"]: Creation complete after 1s
+module.content_pipeline.google_service_account.pipeline["runtime"]: Creation complete after 13s
+module.content_pipeline.google_storage_bucket_iam_member.runtime_data: Creating...
+module.content_pipeline.google_bigquery_dataset_iam_member.runtime_staging: Creating...
+module.content_pipeline.google_service_account.pipeline["build"]: Creation complete after 13s
+module.content_pipeline.google_project_iam_member.build_code_reader: Creating...
+module.content_pipeline.google_service_account.pipeline["trigger"]: Creation complete after 14s
+module.content_pipeline.google_project_iam_member.pipeline["runtime_job_user"]: Creating...
+module.content_pipeline.google_project_iam_member.pipeline["build_log_writer"]: Creating...
+module.content_pipeline.google_project_iam_member.pipeline["trigger_event_receiver"]: Creating...
+module.content_pipeline.google_project_iam_member.pipeline["build_artifact_writer"]: Creating...
+module.content_pipeline.google_storage_bucket_iam_member.runtime_data: Creation complete after 4s
+module.content_pipeline.google_bigquery_dataset_iam_member.runtime_staging: Creation complete after 6s
+module.content_pipeline.google_project_iam_member.pipeline["build_log_writer"]: Creation complete after 9s
+module.content_pipeline.google_project_iam_member.pipeline["runtime_job_user"]: Creation complete after 10s
+module.content_pipeline.google_project_iam_member.pipeline["build_artifact_writer"]: Creation complete after 10s
+module.content_pipeline.google_project_iam_member.build_code_reader: Creation complete after 12s
+module.content_pipeline.google_project_iam_member.pipeline["trigger_event_receiver"]: Creation complete after 11s
+module.content_pipeline.google_cloudfunctions2_function.transform: Creating...
+Error: Error creating function: googleapi: Error 400: Validation failed for trigger projects/<project-id>/locations/europe-west1/triggers/content-transform-002580: Invalid resource state for "": Permission denied while using the Eventarc Service Agent. If you recently started to use Eventarc, it may take a few minutes before all necessary permissions are propagated to the Service Agent. Otherwise, verify that it has Eventarc Service Agent role.
+
+  with module.content_pipeline.google_cloudfunctions2_function.transform,
+  on ../../modules/content_pipeline/function.tf line 15, in resource "google_cloudfunctions2_function" "transform":
+  15: resource "google_cloudfunctions2_function" "transform" {
+
+[The same apply, run again 5 minutes later:]
+
+Terraform will perform the following actions:
+  # module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker will be created
+  # module.content_pipeline.google_cloudfunctions2_function.transform will be created
+
+Plan: 2 to add, 0 to change, 0 to destroy.
+module.content_pipeline.google_cloudfunctions2_function.transform: Creating...
+module.content_pipeline.google_cloudfunctions2_function.transform: Creation complete after 1m55s
+module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker: Creating...
+module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker: Creation complete after 6s
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+data_bucket_name = "<project-id>-content-data"
+function_name = "content-transform"

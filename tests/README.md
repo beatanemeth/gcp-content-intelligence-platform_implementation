@@ -2,7 +2,7 @@
 
 > Authorship note: see the root README.
 
-No real GCP project is used. Every check runs on the laptop, and every result is **simulated**.
+Every check in this file runs on the laptop, and every result is **simulated**. One real run on GCP (2026-10-20) confirmed them; see "What the real run confirmed".
 
 **Purpose of this file:** the one place that explains how the simulation works and where it stops. A reader who wants to rerun the checks, or trust them, starts here.
 
@@ -71,11 +71,32 @@ Creates the 3 cleaned views and the 4 analysis views in the same emulator. Check
 
 <br>
 
+## What the real run confirmed
+
+**Real GCP, 2026-10-20:** the runbook on a personal project; the dummy data, then the full dataset. Details: `docs/for_AI/progress.md`, step 9, part 2.
+
+| Simulated here                                | Real GCP result                                                                 |
+| --------------------------------------------- | ------------------------------------------------------------------------------- |
+| `terraform test`: 31 resources, mocked        | Google accepted all 31; the second `plan` showed no drift                       |
+| IAM grants as names only                      | The roles were enough: the build read its code, the trigger reached the function, the runtime loaded BigQuery |
+| `handle_event` on fake events                 | Eventarc delivered; only `_READY` did work; records = rows in every log line     |
+| Staging checks: 75, 6, 11, 5, 12, 5           | The same; full dataset 113, 9, 17, 8, 18, 8; 0 in every other check             |
+| View checks and the step 8 CSV files          | The same numbers in all 4 analysis views                                        |
+
+<br>
+
 ## What the simulation cannot prove
 
 - **IAM:** that the roles hold the permissions each job needs; propagation delays; the build account's condition.
 - **Function:** real Eventarc delivery and retries; real load jobs; build, memory and timeout limits.
 - **Views:** that real BigQuery returns the same numbers (time zones, `SPLIT`, window order on ties); query cost.
+
+**Found only by the real run:**
+
+- **`gcloud` output format:** `gcloud storage service-agent` prints the email with leading whitespace, which broke a grant in `bootstrap.sh`. ShellCheck checks the script, not a command's output.
+- **Google-managed service agents:** Eventarc's own agent was not ready on the first `apply`; a rerun 5 minutes later passed. A mocked provider has no such agents.
+- **Output formats:** `bq` writes CSV with `\n` line endings and timestamps without milliseconds; the simulation writes `\r\n` and keeps the milliseconds. The values are the same.
+- **Resources outside Terraform:** Cloud Run functions creates a source bucket and an Artifact Registry repository; Google adds 2 default service accounts with Editor. `destroy` does not remove them.
 
 <br>
 

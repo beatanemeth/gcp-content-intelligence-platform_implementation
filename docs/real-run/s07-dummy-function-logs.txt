@@ -1,0 +1,28 @@
+LEVEL  NAME               EXECUTION_ID  TIME_UTC                 LOG
+I      content-transform                2026-10-20 19:47:54.232
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:42.227  blogs/members: 5 records written, 5 rows loaded
+I      content-transform  pWYRIIVysBdd  2026-10-20 19:47:42.180  articles/article_categories: 5 records written, 5 rows loaded
+I      content-transform                2026-10-20 19:47:40.652
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:40.469  blogs/blog_tags: 11 records written, 11 rows loaded
+I      content-transform                2026-10-20 19:47:39.703
+I      content-transform  pWYRIIVysBdd  2026-10-20 19:47:39.538  articles/articles: 12 records written, 12 rows loaded
+I      content-transform                2026-10-20 19:47:35.569
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:34.847  blogs/blog_categories: 6 records written, 6 rows loaded
+I      content-transform                2026-10-20 19:47:34.041
+I      content-transform                2026-10-20 19:47:33.582
+I      content-transform                2026-10-20 19:47:32.557
+I      content-transform                2026-10-20 19:47:31.959  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+I      content-transform                2026-10-20 19:47:31.912
+I      content-transform  OPxcmiRApDAx  2026-10-20 19:47:31.807  blogs/blog_posts: 75 records written, 75 rows loaded
+I      content-transform                2026-10-20 19:47:31.600
+E      content-transform                2026-10-20 19:47:30.992  The request was aborted because there was no available instance. Additional troubleshooting documentation can be found at: https://cloud.google.com/run/docs/troubleshooting#abort-request
+I      content-transform                2026-10-20 19:47:29.683
+I      content-transform                2026-10-20 19:47:29.207  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+I      content-transform                2026-10-20 19:47:28.191
+I      content-transform                2026-10-20 19:47:28.107
+I      content-transform                2026-10-20 19:47:27.924  Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+I      content-transform                2026-10-20 19:47:27.890
+I      content-transform                2026-10-20 19:47:27.821  Starting new instance. Reason: AUTOSCALING - Instance started due to configured scaling factors (e.g. CPU utilization, request throughput, etc.) or no existing capacity for current traffic.
+I      content-transform                2026-10-20 19:47:27.788
+I      content-transform                2026-10-20 19:13:25.979  Default STARTUP TCP probe succeeded after 1 attempt for container "worker" on port 8080.
+I      content-transform                2026-10-20 19:13:23.400  Starting new instance. Reason: DEPLOYMENT_ROLLOUT - Instance started due to traffic shifting between revisions due to deployment, traffic split adjustment, or deployment health check.
