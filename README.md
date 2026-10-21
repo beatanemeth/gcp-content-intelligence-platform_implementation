@@ -8,7 +8,7 @@ Every design decision lives in the [planning repository](https://github.com/beat
 
 > **Simulated, then run once on real GCP:** every check runs on the laptop, and every simulated result is labelled as simulated ([tests/README.md](tests/README.md)).
 
-> **Real run:** the details in the [runbook](docs/runbook.md); the steps at a glance in the [diagram](assets/deployment_steps.png); the Console in [screenshots](assets/real-run/).
+> **Real run:** the details in the [runbook](docs/runbook.md); the steps at a glance in the [diagram](assets/deployment_steps.png); the Console in [screenshots](assets/real-run/); the terminal output in [logs](docs/real-run/).
 
 <br>
 
@@ -94,6 +94,7 @@ The other folders support all four:
 ├── docs/
 │   ├── decisions.md                # design decisions, their reasons and costs
 │   ├── runbook.md                  # real GCP deployment, run on 2026-10-20
+│   ├── real-run/                   # the run's terminal output
 │   └── for_AI/progress.md          # build log and deviations from the plan
 ├── function/                       # Python code: main.py, requirements.txt
 ├── scripts/                        # bootstrap.sh (Part A stand-in), upload_data.sh, data_checks.sql

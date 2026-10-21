@@ -1,0 +1,42 @@
+module.content_pipeline.data.archive_file.function: Reading...
+module.content_pipeline.data.archive_file.function: Read complete after 0s [id=922fff08560d2981b462d8101040b857547d3aec]
+module.content_pipeline.google_service_account.pipeline["trigger"]: Refreshing state... [id=projects/<project-id>/serviceAccounts/content-trigger@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_service_account.pipeline["runtime"]: Refreshing state... [id=projects/<project-id>/serviceAccounts/content-runtime@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_service_account.pipeline["build"]: Refreshing state... [id=projects/<project-id>/serviceAccounts/content-build@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_storage_bucket.data: Refreshing state... [id=<project-id>-content-data]
+module.content_pipeline.google_storage_bucket.source: Refreshing state... [id=<project-id>-content-source]
+module.content_pipeline.google_bigquery_dataset.layer["analysis"]: Refreshing state... [id=projects/<project-id>/datasets/content_analysis]
+module.content_pipeline.google_bigquery_dataset.layer["cleaned"]: Refreshing state... [id=projects/<project-id>/datasets/content_cleaned]
+module.content_pipeline.google_bigquery_dataset.layer["staging"]: Refreshing state... [id=projects/<project-id>/datasets/content_staging]
+module.content_pipeline.google_storage_bucket_object.function_source: Refreshing state... [id=<project-id>-content-source-function-source-a2c842834144aa1ffd3eb5cefa606479.zip]
+module.content_pipeline.google_bigquery_table.staging["blog_tags"]: Refreshing state... [id=projects/<project-id>/datasets/content_staging/tables/blog_tags]
+module.content_pipeline.google_bigquery_table.staging["members"]: Refreshing state... [id=projects/<project-id>/datasets/content_staging/tables/members]
+module.content_pipeline.google_bigquery_table.staging["blog_categories"]: Refreshing state... [id=projects/<project-id>/datasets/content_staging/tables/blog_categories]
+module.content_pipeline.google_bigquery_table.staging["article_categories"]: Refreshing state... [id=projects/<project-id>/datasets/content_staging/tables/article_categories]
+module.content_pipeline.google_bigquery_table.staging["blog_posts"]: Refreshing state... [id=projects/<project-id>/datasets/content_staging/tables/blog_posts]
+module.content_pipeline.google_bigquery_table.staging["articles"]: Refreshing state... [id=projects/<project-id>/datasets/content_staging/tables/articles]
+module.content_pipeline.google_bigquery_table.cleaned["articles"]: Refreshing state... [id=projects/<project-id>/datasets/content_cleaned/tables/articles]
+module.content_pipeline.google_bigquery_table.cleaned["blog_posts"]: Refreshing state... [id=projects/<project-id>/datasets/content_cleaned/tables/blog_posts]
+module.content_pipeline.google_bigquery_table.content: Refreshing state... [id=projects/<project-id>/datasets/content_cleaned/tables/content]
+module.content_pipeline.google_project_iam_member.pipeline["build_log_writer"]: Refreshing state... [id=<project-id>/roles/logging.logWriter/serviceAccount:content-build@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_storage_bucket_iam_member.runtime_data: Refreshing state... [id=b/<project-id>-content-data/roles/storage.objectUser/serviceAccount:content-runtime@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_project_iam_member.pipeline["build_artifact_writer"]: Refreshing state... [id=<project-id>/roles/artifactregistry.writer/serviceAccount:content-build@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_project_iam_member.pipeline["trigger_event_receiver"]: Refreshing state... [id=<project-id>/roles/eventarc.eventReceiver/serviceAccount:content-trigger@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_project_iam_member.pipeline["runtime_job_user"]: Refreshing state... [id=<project-id>/roles/bigquery.jobUser/serviceAccount:content-runtime@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_project_iam_member.build_code_reader: Refreshing state... [id=<project-id>/roles/storage.objectViewer/serviceAccount:content-build@<project-id>.iam.gserviceaccount.com/content-build-code-buckets-only/Read objects in the function's code buckets only./resource.name.startsWith("projects/_/buckets/gcf-v2-sources-") ||
+resource.name.startsWith("projects/_/buckets/gcf-v2-uploads-") ||
+resource.name.startsWith("projects/_/buckets/run-sources-") ||
+resource.name.startsWith("projects/_/buckets/<project-id>-content-source/")
+]
+module.content_pipeline.google_bigquery_dataset_iam_member.runtime_staging: Refreshing state... [id=projects/<project-id>/datasets/content_staging/roles/bigquery.dataEditor/serviceAccount:content-runtime@<project-id>.iam.gserviceaccount.com]
+module.content_pipeline.google_bigquery_table.analysis["top_posts_per_category"]: Refreshing state... [id=projects/<project-id>/datasets/content_analysis/tables/top_posts_per_category]
+module.content_pipeline.google_bigquery_table.analysis["article_text_stats"]: Refreshing state... [id=projects/<project-id>/datasets/content_analysis/tables/article_text_stats]
+module.content_pipeline.google_bigquery_table.analysis["content_per_month"]: Refreshing state... [id=projects/<project-id>/datasets/content_analysis/tables/content_per_month]
+module.content_pipeline.google_bigquery_table.analysis["tag_frequency"]: Refreshing state... [id=projects/<project-id>/datasets/content_analysis/tables/tag_frequency]
+module.content_pipeline.google_cloudfunctions2_function.transform: Refreshing state... [id=projects/<project-id>/locations/europe-west1/functions/content-transform]
+module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker: Refreshing state... [id=projects/<project-id>/locations/europe-west1/services/content-transform/roles/run.invoker/serviceAccount:content-trigger@<project-id>.iam.gserviceaccount.com]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.

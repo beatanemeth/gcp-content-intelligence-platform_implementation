@@ -1,0 +1,40 @@
+[Trimmed for the repository: resource attributes, refresh lines and progress timers removed; private values replaced with placeholders.]
+
+Terraform will perform the following actions:
+  # module.content_pipeline.google_bigquery_dataset.layer["analysis"] will be created
+  # module.content_pipeline.google_bigquery_dataset.layer["cleaned"] will be created
+  # module.content_pipeline.google_bigquery_dataset.layer["staging"] will be created
+  # module.content_pipeline.google_bigquery_dataset_iam_member.runtime_staging will be created
+  # module.content_pipeline.google_bigquery_table.analysis["article_text_stats"] will be created
+  # module.content_pipeline.google_bigquery_table.analysis["content_per_month"] will be created
+  # module.content_pipeline.google_bigquery_table.analysis["tag_frequency"] will be created
+  # module.content_pipeline.google_bigquery_table.analysis["top_posts_per_category"] will be created
+  # module.content_pipeline.google_bigquery_table.cleaned["articles"] will be created
+  # module.content_pipeline.google_bigquery_table.cleaned["blog_posts"] will be created
+  # module.content_pipeline.google_bigquery_table.content will be created
+  # module.content_pipeline.google_bigquery_table.staging["article_categories"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["articles"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["blog_categories"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["blog_posts"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["blog_tags"] will be created
+  # module.content_pipeline.google_bigquery_table.staging["members"] will be created
+  # module.content_pipeline.google_cloud_run_v2_service_iam_member.trigger_invoker will be created
+  # module.content_pipeline.google_cloudfunctions2_function.transform will be created
+  # module.content_pipeline.google_project_iam_member.build_code_reader will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["build_artifact_writer"] will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["build_log_writer"] will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["runtime_job_user"] will be created
+  # module.content_pipeline.google_project_iam_member.pipeline["trigger_event_receiver"] will be created
+  # module.content_pipeline.google_service_account.pipeline["build"] will be created
+  # module.content_pipeline.google_service_account.pipeline["runtime"] will be created
+  # module.content_pipeline.google_service_account.pipeline["trigger"] will be created
+  # module.content_pipeline.google_storage_bucket.data will be created
+  # module.content_pipeline.google_storage_bucket.source will be created
+  # module.content_pipeline.google_storage_bucket_iam_member.runtime_data will be created
+  # module.content_pipeline.google_storage_bucket_object.function_source will be created
+
+Plan: 31 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + data_bucket_name = "<project-id>-content-data"
+  + function_name    = "content-transform"

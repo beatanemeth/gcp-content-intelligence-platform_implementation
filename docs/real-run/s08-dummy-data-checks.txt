@@ -1,0 +1,22 @@
++-------------------+------------------------+--------+
+|    check_name     |       table_name       | result |
++-------------------+------------------------+--------+
+| duplicate_keys    | blog_categories        |      0 |
+| duplicate_keys    | article_categories     |      0 |
+| orphan_references | blog_posts.memberId    |      0 |
+| orphan_references | articles.category      |      0 |
+| duplicate_keys    | members                |      0 |
+| duplicate_keys    | articles               |      0 |
+| duplicate_keys    | blog_tags              |      0 |
+| row_count         | blog_tags              |     11 |
+| row_count         | blog_posts             |     75 |
+| row_count         | members                |      5 |
+| row_count         | blog_categories        |      6 |
+| orphan_references | blog_posts.tagIds      |      0 |
+| duplicate_keys    | blog_posts             |      0 |
+| orphan_references | blog_posts.categoryIds |      0 |
+| missing_titles    | blog_posts             |      0 |
+| row_count         | articles               |     12 |
+| row_count         | article_categories     |      5 |
+| missing_titles    | articles               |      0 |
++-------------------+------------------------+--------+

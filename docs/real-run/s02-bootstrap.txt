@@ -1,0 +1,73 @@
+1. Project: <project-id>
+Create in progress for [https://cloudresourcemanager.googleapis.com/v1/projects/<project-id>].
+Waiting for [operations/create_project.global.7469273554510969607] to finish...
+.done.
+Enabling service [cloudapis.googleapis.com] on project [<project-id>]...
+Operation "operations/acat.p2-<project-number>-24207d53-a1fe-4284-8d91-0ee8ae19547b" finished successfully.
+2. Billing link
+billingAccountName: billingAccounts/<billing-account-id>
+billingEnabled: true
+name: projects/<project-id>/billingInfo
+projectId: <project-id>
+3. APIs
+Operation "operations/acf.p2-<project-number>-1cdad975-4c11-4211-bb57-fcaa97d48915" finished successfully.
+4. Budget: 10 per month, alerts at 50, 90 and 100 %
+WARNING: The following filter keys were not present in any resource : displayName
+Created [98cd0726-a7aa-4c17-b876-89ad0a7a1de8].
+5. Terraform state bucket: gs://<project-id>-tfstate
+Creating gs://<project-id>-tfstate/...
+
+Updating gs://<project-id>-tfstate/...
+....
+6. Cloud Storage service agent: roles/pubsub.publisher
+ERROR: Policy modification failed. For a binding with condition, run "gcloud alpha iam policies lint-condition" to identify issues in condition.
+ERROR: (gcloud.projects.add-iam-policy-binding) INVALID_ARGUMENT: Service account
+  service-<project-number>@gs-project-accounts.iam.gserviceaccount.com does not exist.
+1. Project: <project-id>
+2. Billing link
+3. APIs
+Operation "operations/acat.p2-<project-number>-b18f2df5-44dd-4ff1-b75f-51fc2d3c254f" finished successfully.
+4. Budget: 10 per month, alerts at 50, 90 and 100 %
+5. Terraform state bucket: gs://<project-id>-tfstate
+
+Updating gs://<project-id>-tfstate/...
+
+6. Cloud Storage service agent: roles/pubsub.publisher
+ERROR: Policy modification failed. For a binding with condition, run "gcloud alpha iam policies lint-condition" to identify issues in condition.
+ERROR: (gcloud.projects.add-iam-policy-binding) INVALID_ARGUMENT: Service account
+  service-<project-number>@gs-project-accounts.iam.gserviceaccount.com does not exist.
+ERROR: Policy modification failed. For a binding with condition, run "gcloud alpha iam policies lint-condition" to identify issues in condition.
+ERROR: (gcloud.projects.add-iam-policy-binding) INVALID_ARGUMENT: Service account
+  service-<project-number>@gs-project-accounts.iam.gserviceaccount.com does not exist.
+Updated IAM policy for project [<project-id>].
+bindings:
+- members:
+  - serviceAccount:<project-number>@cloudbuild.gserviceaccount.com
+  role: roles/cloudbuild.builds.builder
+- members:
+  - serviceAccount:service-<project-number>@gcp-sa-cloudbuild.iam.gserviceaccount.com
+  role: roles/cloudbuild.serviceAgent
+- members:
+  - serviceAccount:service-<project-number>@gcf-admin-robot.iam.gserviceaccount.com
+  role: roles/cloudfunctions.standardServiceAgent
+- members:
+  - serviceAccount:service-<project-number>@containerregistry.iam.gserviceaccount.com
+  role: roles/containerregistry.ServiceAgent
+- members:
+  - serviceAccount:<project-number>-compute@developer.gserviceaccount.com
+  - serviceAccount:<project-id>@appspot.gserviceaccount.com
+  role: roles/editor
+- members:
+  - user:<email>
+  role: roles/owner
+- members:
+  - serviceAccount:service-<project-number>@gs-project-accounts.iam.gserviceaccount.com
+  role: roles/pubsub.publisher
+- members:
+  - serviceAccount:service-<project-number>@gcp-sa-pubsub.iam.gserviceaccount.com
+  role: roles/pubsub.serviceAgent
+- members:
+  - serviceAccount:service-<project-number>@serverless-robot-prod.iam.gserviceaccount.com
+  role: roles/run.serviceAgent
+etag: BwZeSMq0i54=
+version: 1

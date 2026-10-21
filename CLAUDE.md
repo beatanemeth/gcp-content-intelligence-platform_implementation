@@ -82,7 +82,7 @@ As built; the planned layout is in `rebuild_plan/step-0_overview.md`.
 │   ├── function/                   # pytest for the function code
 │   └── simulation/                 # check_staging.py, check_views.py (BigQuery emulator)
 ├── data/                           # dummy/ committed; raw/ git-ignored
-├── docs/                           # decisions.md; runbook.md (real GCP, run on 2026-10-20)
+├── docs/                           # decisions.md; runbook.md (real GCP, run on 2026-10-20); real-run/ (its terminal output)
 │   └── for_AI/progress.md          # build log and deviations
 ├── assets/                         # the pipeline and deployment diagrams; real-run/ (Console screenshots)
 └── .github/workflows/              # 3 offline CI workflows

@@ -1,0 +1,22 @@
+Copying file://data/dummy/blogs/blog_categories.json to gs://<project-id>-content-data/raw/blogs/blog_categories.json
+Copying file://data/dummy/blogs/blog_posts.json to gs://<project-id>-content-data/raw/blogs/blog_posts.json
+
+Copying file://data/dummy/blogs/blog_tags.json to gs://<project-id>-content-data/raw/blogs/blog_tags.json
+Copying file://data/dummy/blogs/members.json to gs://<project-id>-content-data/raw/blogs/members.json
+....
+
+Average throughput: 1.2MiB/s
+Copying file://- to gs://<project-id>-content-data/raw/blogs/_READY
+
+...
+Copying file://data/dummy/articles/article_categories.json to gs://<project-id>-content-data/raw/articles/article_categories.json
+Copying file://data/dummy/articles/articles.json to gs://<project-id>-content-data/raw/articles/articles.json
+
+....
+
+Average throughput: 351.1kiB/s
+Copying file://- to gs://<project-id>-content-data/raw/articles/_READY
+
+...
+Uploaded. The function's name, to filter its logs:
+  terraform -chdir=terraform/environments/dev output -raw function_name

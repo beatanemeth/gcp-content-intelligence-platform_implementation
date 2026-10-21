@@ -12,7 +12,7 @@ The build log. The [plan](https://github.com/beatanemeth/gcp-content-intelligenc
 
 **2026-10-20:** the real run on GCP is complete (step 9, part 2). Every check of the plan passed; 3 findings below. The project is kept for more runs and is deleted before the Free Trial ends (2027-01-19).
 
-**Next:** fix finding 1 in `scripts/bootstrap.sh` on its own branch.
+**Next:** fix finding 1 in `scripts/bootstrap.sh` together with the next deployment, which also proves the fix on real GCP.
 
 <br>
 

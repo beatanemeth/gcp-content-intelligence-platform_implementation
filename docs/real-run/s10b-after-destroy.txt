@@ -1,0 +1,7 @@
+<project-id>-tfstate
+gcf-v2-sources-<project-number>-europe-west1
+Listing items under project <project-id>, location europe-west1.
+
+                                                                                                                      ARTIFACT_REGISTRY
+REPOSITORY     FORMAT  MODE                 DESCRIPTION                                                                                 LOCATION      LABELS                          ENCRYPTION          CREATE_TIME          UPDATE_TIME          SIZE (MB)
+gcf-artifacts  DOCKER  STANDARD_REPOSITORY  This repository is created and used by Cloud Functions for storing function docker images.  europe-west1  goog-managed-by=cloudfunctions  Google-managed key  2026-10-20T21:12:06  2026-10-20T22:39:36  27.128
