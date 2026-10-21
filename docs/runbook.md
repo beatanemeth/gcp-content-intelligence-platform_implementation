@@ -4,7 +4,7 @@
 
 > Authorship note: see the root README.
 
-Every command runs from the repository root. Replace `<project-id>` and `<billing-account-id>` with the real values.
+Every command runs from the repository root. Replace `<project-id>` and `<billing-account-id>` with the real values. The steps as a diagram: [deployment steps](../assets/deployment_steps.png).
 
 | When       | Step | Command                                                                                                                                                                                              |
 | ---------- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

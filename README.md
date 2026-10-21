@@ -6,7 +6,9 @@ Every design decision lives in the [planning repository](https://github.com/beat
 
 > **Authorship note:** Planned by me, implemented with Claude Code. Content by me, wording by Claude.
 
-> **Simulated, then run once on real GCP:** every check runs on the laptop, and every simulated result is labelled as simulated ([tests/README.md](tests/README.md)). The [runbook](docs/runbook.md) ran on real GCP on 2026-10-20; see "Real GCP run" below.
+> **Simulated, then run once on real GCP:** every check runs on the laptop, and every simulated result is labelled as simulated ([tests/README.md](tests/README.md)).
+
+> **Real run:** the details in the [runbook](docs/runbook.md); the steps at a glance in the [diagram](assets/deployment_steps.png).
 
 <br>
 
@@ -46,13 +48,13 @@ The main decisions, with their reasons and costs, are in [docs/decisions.md](doc
 
 **Real GCP, 2026-10-20:** the module deployed to a personal GCP project, ran on the dummy data and the full dataset, and was destroyed.
 
-| Check                                | Result (real GCP)                                                            |
-| ------------------------------------ | ---------------------------------------------------------------------------- |
-| `terraform apply`                    | 31 resources; no drift on the second `plan`                                  |
-| Upload, function, BigQuery           | Records = rows for all 6 files; dummy and full dataset                       |
-| Data checks (`data_checks.sql`)      | Full dataset: 113, 9, 17, 8, 18, 8 rows; no duplicates, orphans or missing titles |
-| Analysis views vs. the simulation    | The same numbers in all 4 views                                              |
-| `terraform destroy`                  | 31 destroyed; Part A untouched                                               |
+| Check                             | Result (real GCP)                                                                 |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `terraform apply`                 | 31 resources; no drift on the second `plan`                                       |
+| Upload, function, BigQuery        | Records = rows for all 6 files; dummy and full dataset                            |
+| Data checks (`data_checks.sql`)   | Full dataset: 113, 9, 17, 8, 18, 8 rows; no duplicates, orphans or missing titles |
+| Analysis views vs. the simulation | The same numbers in all 4 views                                                   |
+| `terraform destroy`               | 31 destroyed; Part A untouched                                                    |
 
 - **3 findings:** a bug in the Part A stand-in script, a Google-side permission delay and 2 output-format differences; none in the module. Details: [tests/README.md](tests/README.md#what-the-real-run-confirmed).
 - **Cost:** covered by the Free Trial credit.
@@ -87,7 +89,7 @@ The other folders support all four:
 .
 ├── .claude/                        # Claude Code rules, skills and settings
 ├── .github/workflows/              # offline CI: Terraform, Python, shell
-├── assets/                         # the pipeline diagram
+├── assets/                         # the pipeline and deployment diagrams
 ├── data/dummy/                     # made-up exports; the real ones stay off the repository
 ├── docs/
 │   ├── decisions.md                # design decisions, their reasons and costs
